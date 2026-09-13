@@ -1,0 +1,6 @@
+{
+  "name": "TRANSYLVANIA - The Heart of Romania",
+  "description": "Independent travel and cultural reference guide for Transylvania and Romania, featuring destinations, history, culture, and practical visitor guides.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
