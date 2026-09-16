@@ -79,22 +79,101 @@ function getWpBaseUrl(): string {
   return url.replace(/\/+$/, '');
 }
 
+/**
+ * Extracts the first <img> tag from HTML content, retrieving src, alt, and caption/credit if available.
+ */
+export function extractFirstImageFromHtml(html: string): {
+  src: string;
+  alt: string;
+  credit?: string;
+} | null {
+  if (!html) return null;
+
+  // Match first <img ...> tag
+  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+  if (!imgMatch) return null;
+
+  const fullImgTag = imgMatch[0];
+  const src = imgMatch[1];
+  if (!src || src.startsWith('data:')) return null;
+
+  // Extract alt attribute
+  const altMatch = fullImgTag.match(/alt=["']([^"']*)["']/i);
+  const alt = altMatch ? altMatch[1] : '';
+
+  // Extract credit or caption if enclosed in figure / figcaption
+  let credit = '';
+  const figureRegex = /<figure[^>]*>([\s\S]*?)<\/figure>/gi;
+  let figureMatch;
+  while ((figureMatch = figureRegex.exec(html)) !== null) {
+    if (figureMatch[1].includes(src)) {
+      const captionMatch = figureMatch[1].match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/i);
+      if (captionMatch) {
+        credit = sanitizeHtmlToText(captionMatch[1]);
+      }
+      break;
+    }
+  }
+
+  if (!credit) {
+    const titleMatch = fullImgTag.match(/(?:data-credit|title)=["']([^"']*)["']/i);
+    if (titleMatch && titleMatch[1]) {
+      credit = sanitizeHtmlToText(titleMatch[1]);
+    }
+  }
+
+  return {
+    src,
+    alt,
+    credit: credit || undefined
+  };
+}
+
 export function transformRawWordPressPost(raw: any): WordPressPost {
   const title = sanitizeHtmlToText(raw.title?.rendered || 'Untitled Post');
   const rawExcerpt = raw.excerpt?.rendered || '';
   const cleanExcerpt = sanitizeHtmlToText(rawExcerpt);
   const contentHtml = raw.content?.rendered || '';
 
-  // Extract featured media
-  const mediaObj = raw._embedded?.['wp:featuredmedia']?.[0];
-  const heroImage = mediaObj?.source_url || '';
-  const heroImageAlt = mediaObj?.alt_text || title;
-
   // Extract author
   const rawAuthor = raw._embedded?.author?.[0]?.name;
   const authorName = (rawAuthor && rawAuthor.toLowerCase() !== 'admin' && rawAuthor.toLowerCase() !== 'transylvania editorial')
     ? rawAuthor
     : 'The Traveller';
+
+  // 1. Featured Media
+  const mediaObj = raw._embedded?.['wp:featuredmedia']?.[0];
+  let heroImage = mediaObj?.source_url || raw.jetpack_featured_media_url || raw.featured_image_src || '';
+  let heroImageAlt = mediaObj?.alt_text || '';
+  let heroImageCredit: string | undefined = undefined;
+
+  if (mediaObj?.caption?.rendered) {
+    const rawCaption = sanitizeHtmlToText(mediaObj.caption.rendered);
+    if (rawCaption) heroImageCredit = rawCaption;
+  }
+  if (!heroImageCredit && mediaObj?.description?.rendered) {
+    const rawDesc = sanitizeHtmlToText(mediaObj.description.rendered);
+    if (rawDesc && rawDesc.length < 100) heroImageCredit = rawDesc;
+  }
+
+  // 2. Thumbnail Fallback: If no Featured Image is set, fall back to first <img> in body content
+  if (!heroImage) {
+    const bodyImg = extractFirstImageFromHtml(contentHtml);
+    if (bodyImg) {
+      heroImage = bodyImg.src;
+      if (!heroImageAlt) heroImageAlt = bodyImg.alt;
+      if (bodyImg.credit) heroImageCredit = bodyImg.credit;
+    }
+  }
+
+  if (!heroImageAlt) {
+    heroImageAlt = title;
+  }
+
+  // 3. Apply photo credit overlay to whichever image is used
+  if (!heroImageCredit && heroImage) {
+    heroImageCredit = `Photo: ${authorName}`;
+  }
 
   // Extract categories and tags
   const terms = raw._embedded?.['wp:term'] || [];
@@ -127,6 +206,7 @@ export function transformRawWordPressPost(raw: any): WordPressPost {
     link: raw.link,
     heroImage,
     heroImageAlt,
+    heroImageCredit,
     authorName,
     categoryName,
     tags,

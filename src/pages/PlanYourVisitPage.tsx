@@ -58,7 +58,7 @@ export const PlanYourVisitPage: React.FC<PlanYourVisitPageProps> = ({ onNavigate
           <Compass className="w-3.5 h-3.5" />
           <span>Travel Essentials & Advice</span>
         </div>
-        <h1 className="font-brand text-4xl sm:text-5xl font-bold text-[#1B3322]">
+        <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] break-words">
           Plan Your Visit to Romania
         </h1>
         <p className="text-base sm:text-lg text-[#525B51] max-w-3xl font-editorial leading-relaxed">
@@ -108,7 +108,7 @@ export const PlanYourVisitPage: React.FC<PlanYourVisitPageProps> = ({ onNavigate
                 onNavigate(`/plan-your-visit/${guide.slug}`);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="bg-white border border-[#E3DDD2] hover:border-[#2D5A38] rounded-2xl p-6 hover:bg-[#FAF9F6] transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
+              className="bg-white border border-[#E3DDD2] hover:border-[#2D5A38] rounded-2xl p-6 hover:bg-[#FAF9F6] hover:shadow-lg hover:-translate-y-0.5 transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -147,9 +147,8 @@ export const PlanYourVisitPage: React.FC<PlanYourVisitPageProps> = ({ onNavigate
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#F0EBE3] mt-5 flex items-center justify-between text-xs font-bold text-[#1B3322] group-hover:text-[#2D5A38]">
-                <span>Read Full Practical Guide</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <div className="pt-4 border-t border-[#F0EBE3] mt-5 flex items-center justify-between text-xs text-[#717A70]">
+                <span className="font-medium">Practical Reference & Logistics</span>
               </div>
             </div>
           ))}

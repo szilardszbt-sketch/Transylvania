@@ -135,7 +135,7 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({
 
               {/* Title & Multi-language names */}
               <div>
-                <h1 className="font-brand text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#FAF8F5]">
+                <h1 className="font-brand text-[clamp(2rem,7.5vw,4.5rem)] sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#FAF8F5] break-words leading-none sm:leading-tight">
                   {destination.name}
                 </h1>
                 <div className="text-xs sm:text-sm font-editorial italic text-[#DCD5C9] mt-2 flex flex-wrap gap-x-4">
@@ -366,7 +366,7 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({
                     onNavigate(`/destinations/${nearDest.slug}`);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between"
+                  className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between"
                 >
                   <div>
                     <LocationImage
@@ -394,9 +394,8 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({
                     </div>
                   </div>
 
-                  <div className="p-5 pt-0 border-t border-[#F2EEE8] mt-3 flex items-center justify-between text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38]">
-                    <span>Explore {nearDest.name}</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <div className="p-5 pt-0 border-t border-[#F2EEE8] mt-3 flex items-center justify-between text-xs text-[#717A70]">
+                    <span>Regional Destination Guide</span>
                   </div>
                 </div>
               ))}
@@ -424,7 +423,7 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({
                     onNavigate(`/articles/${article.slug}`);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="bg-white border border-[#E5E0D8] rounded-xl p-6 hover:border-[#2D5A38]/50 hover:bg-[#FAF8F4] transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
+                  className="bg-white border border-[#E5E0D8] rounded-xl p-6 hover:border-[#2D5A38]/50 hover:bg-[#FAF8F4] hover:shadow-lg hover:-translate-y-0.5 transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-[11px] text-[#869187]">
@@ -441,9 +440,8 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-[#F0EBE3] mt-4 flex items-center justify-between text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38]">
-                    <span>Read Full Essay</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <div className="pt-4 border-t border-[#F0EBE3] mt-4 flex items-center justify-between text-xs text-[#717A70]">
+                    <span className="font-editorial italic">Historical Analysis & Context</span>
                   </div>
                 </div>
               ))}

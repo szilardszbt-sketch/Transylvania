@@ -229,7 +229,7 @@ export const FromTheBlog: React.FC<FromTheBlogProps> = ({
                   }
                 }
               }}
-              className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 transition-all group flex flex-col justify-between text-left cursor-pointer"
+              className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all group flex flex-col justify-between text-left cursor-pointer"
             >
               <div>
                 <div className="relative aspect-[16/10] overflow-hidden bg-[#EAE5DC]">
@@ -325,13 +325,9 @@ export const FromTheBlog: React.FC<FromTheBlogProps> = ({
                 </div>
               </div>
 
-              <div className="p-5 pt-3 border-t border-[#F2EEE8] mt-1 flex items-center justify-between text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38]">
-                <span className="text-xs text-[#717A70] font-editorial italic font-normal">
+              <div className="p-5 pt-3 border-t border-[#F2EEE8] mt-1 flex items-center justify-between text-xs text-[#717A70]">
+                <span className="font-editorial italic">
                   By {post.authorName}
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2D5A38] group-hover:translate-x-0.5 transition-transform">
-                  <span>Read on Blog</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </a>

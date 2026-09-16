@@ -28,7 +28,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
           Independent Reference
         </span>
-        <h1 className="font-brand text-4xl sm:text-5xl font-bold text-[#1B3322]">
+        <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] break-words">
           About Transylvania: The Heart of Romania
         </h1>
         <p className="text-sm sm:text-base text-[#5D665B] max-w-2xl font-editorial leading-relaxed">

@@ -40,7 +40,7 @@ export const TermsPage: React.FC<TermsPageProps> = ({ onNavigate }) => {
           <Scale className="w-4 h-4 text-[#2D5A38]" />
           <span>Terms of Use & Disclaimers</span>
         </div>
-        <h1 className="font-brand text-4xl sm:text-5xl font-bold text-[#1B3322] leading-tight">
+        <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] leading-tight break-words">
           Terms &amp; Conditions
         </h1>
         <p className="text-sm sm:text-base text-[#525B51] font-editorial leading-relaxed max-w-3xl">

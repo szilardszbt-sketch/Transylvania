@@ -7,6 +7,11 @@
     --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     font-family: var(--font-body);
     color: #232724;
@@ -16,6 +21,7 @@
   h1, h2, h3, .brand-title {
     font-family: var(--font-heading);
     letter-spacing: 0.04em;
+    overflow-wrap: break-word;
   }
 }
 

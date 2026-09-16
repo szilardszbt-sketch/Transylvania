@@ -117,7 +117,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
         <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
           Get in Touch
         </span>
-        <h1 className="font-brand text-4xl sm:text-5xl font-bold text-[#1B3322]">
+        <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] break-words">
           Contact &amp; Inquiries
         </h1>
         <p className="text-sm sm:text-base text-[#5D665B] max-w-2xl font-editorial leading-relaxed">

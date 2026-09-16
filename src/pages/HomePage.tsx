@@ -77,34 +77,34 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Hero Content Box */}
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white py-24 sm:py-32">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white py-20 sm:py-32">
           {/* Independent Reference Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#E2DDD3] text-[11px] font-sans tracking-[0.2em] uppercase mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#A3CCA8]" />
-            Independent Travel & Cultural Reference
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#E2DDD3] text-[10px] min-[380px]:text-[11px] font-sans tracking-[0.12em] min-[380px]:tracking-[0.2em] uppercase mb-6 sm:mb-8 max-w-full text-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#A3CCA8] shrink-0" />
+            <span className="truncate sm:overflow-visible">Independent Travel &amp; Cultural Reference</span>
           </div>
 
           {/* Main Title: TRANSYLVANIA (Visually Dominant) */}
-          <h1 className="font-brand text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-[0.12em] text-[#FAF8F5] leading-none drop-shadow-md">
+          <h1 className="font-brand text-[clamp(1.85rem,8.2vw,5.5rem)] sm:text-7xl lg:text-8xl font-extrabold tracking-[0.05em] min-[390px]:tracking-[0.08em] sm:tracking-[0.12em] text-[#FAF8F5] leading-none drop-shadow-md break-normal">
             TRANSYLVANIA
           </h1>
 
           {/* Subtitle: The Heart of Romania (Much Smaller) */}
-          <div className="font-sans text-xs sm:text-sm lg:text-base font-semibold tracking-[0.32em] uppercase text-[#D2CBC1] mt-3 sm:mt-4">
+          <div className="font-sans text-[11px] min-[380px]:text-xs sm:text-sm lg:text-base font-semibold tracking-[0.18em] sm:tracking-[0.32em] uppercase text-[#D2CBC1] mt-3 sm:mt-4">
             The Heart of Romania
           </div>
 
           {/* Short Supporting Text */}
-          <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#EAE5DC] font-editorial italic leading-relaxed mt-6 sm:mt-8">
+          <p className="max-w-2xl mx-auto text-sm min-[390px]:text-base sm:text-lg text-[#EAE5DC] font-editorial italic leading-relaxed sm:leading-relaxed mt-5 sm:mt-8 px-2 sm:px-4">
             &ldquo;Discover the places, stories, culture and landscapes that make Romania worth exploring.&rdquo;
           </p>
 
           {/* Call to Actions */}
-          <div className="flex items-center justify-center mt-10 sm:mt-12">
+          <div className="flex items-center justify-center mt-8 sm:mt-12 px-2">
             <button
               id="hero-explore-btn"
               onClick={() => handleNav('/explore')}
-              className="w-full sm:w-auto px-8 py-4 bg-[#F5F2EC] hover:bg-[#EBE5DA] text-[#1B3322] font-brand font-bold text-xs sm:text-sm tracking-[0.18em] uppercase rounded-md shadow-lg transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-[#F5F2EC] hover:bg-[#EBE5DA] text-[#1B3322] font-brand font-bold text-xs sm:text-sm tracking-[0.14em] sm:tracking-[0.18em] uppercase rounded-md shadow-lg transition-all transform hover:-translate-y-0.5 cursor-pointer text-center"
             >
               EXPLORE TRANSYLVANIA
             </button>
@@ -130,7 +130,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
                 Start Your Journey
               </span>
-              <h2 className="font-brand text-3xl sm:text-4xl font-bold text-[#1B3322]">
+              <h2 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl font-bold text-[#1B3322]">
                 Where will you begin?
               </h2>
               <p className="text-xs sm:text-sm text-[#5D665B] max-w-2xl font-editorial leading-relaxed">
@@ -152,7 +152,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <div
                 key={city.id}
                 id={`gateway-card-${city.slug}`}
-                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                onClick={() => handleNav(`/explore?gateway=${city.slug}`)}
+                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all flex flex-col justify-between group cursor-pointer"
               >
                 <div>
                   <LocationImage
@@ -174,7 +175,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   </LocationImage>
 
                   <div className="p-5 space-y-2.5">
-                    <h3 className="font-brand text-xl font-bold text-[#1B3322]">
+                    <h3 className="font-brand text-xl font-bold text-[#1B3322] group-hover:text-[#2D5A38] transition-colors">
                       {city.name}
                     </h3>
                     <p className="text-xs text-[#525B51] leading-relaxed line-clamp-3">
@@ -187,13 +188,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   <span className="text-[11px] text-[#788177] font-medium">
                     {city.distanceToCore}
                   </span>
-                  <button
-                    onClick={() => handleNav(`/explore?gateway=${city.slug}`)}
-                    className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] inline-flex items-center gap-1 transition-colours cursor-pointer"
-                  >
-                    <span>View Hub</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
             ))}
@@ -210,7 +204,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
               Interests & Architecture
             </span>
-            <h2 className="font-brand text-3xl sm:text-4xl font-bold text-[#1B3322] mt-1">
+            <h2 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl font-bold text-[#1B3322] mt-1">
               Explore by Interest
             </h2>
             <p className="text-xs sm:text-sm text-[#5D665B] max-w-2xl font-editorial leading-relaxed mt-1.5">
@@ -254,7 +248,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
                 Essential Destinations
               </span>
-              <h2 className="font-brand text-3xl sm:text-4xl font-bold text-[#1B3322]">
+              <h2 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl font-bold text-[#1B3322]">
                 Featured Destination Guides
               </h2>
               <p className="text-xs sm:text-sm text-[#5D665B] max-w-2xl font-editorial leading-relaxed">
@@ -277,7 +271,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 key={dest.id}
                 id={`featured-dest-${dest.slug}`}
                 onClick={() => handleNav(`/destinations/${dest.slug}`)}
-                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between"
+                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   <LocationImage
@@ -303,7 +297,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
                     <div className="absolute bottom-4 left-4 right-4 text-white z-10 pointer-events-none">
                       <div className="flex items-baseline gap-2">
-                        <h3 className="font-brand text-2xl sm:text-3xl font-bold tracking-wide">
+                        <h3 className="font-brand text-xl min-[380px]:text-2xl sm:text-3xl font-bold tracking-wide break-words">
                           {dest.name}
                         </h3>
                         {dest.romanianName && dest.romanianName !== dest.name && (
@@ -340,10 +334,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   <span className="text-xs text-[#2D5A38] font-semibold">
                     Detailed Regional & Heritage Guide
                   </span>
-                  <span className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] inline-flex items-center gap-1 transition-colours">
-                    <span>Read Complete Guide</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </span>
                 </div>
               </div>
             ))}
@@ -361,7 +351,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
                 In-Depth Context
               </span>
-              <h2 className="font-brand text-3xl sm:text-4xl font-bold text-[#1B3322]">
+              <h2 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl font-bold text-[#1B3322]">
                 History & Cultural Heritage
               </h2>
               <p className="text-xs sm:text-sm text-[#5D665B] max-w-2xl font-editorial leading-relaxed">
@@ -384,7 +374,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 key={article.id}
                 id={`article-card-${article.slug}`}
                 onClick={() => handleNav(`/articles/${article.slug}`)}
-                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between"
+                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   <div className="relative aspect-[16/11] overflow-hidden bg-[#EAE5DC]">
@@ -419,10 +409,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   <span className="text-[11px] text-[#788177] font-editorial italic">
                     By {article.author.name}
                   </span>
-                  <span className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] inline-flex items-center gap-1 transition-colours">
-                    <span>Read</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
                 </div>
               </div>
             ))}
@@ -440,7 +426,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
                 Practical Preparation
               </span>
-              <h2 className="font-brand text-3xl sm:text-4xl font-bold text-[#1B3322]">
+              <h2 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl font-bold text-[#1B3322]">
                 Plan Your Visit
               </h2>
               <p className="text-xs sm:text-sm text-[#5D665B] max-w-2xl font-editorial leading-relaxed">
@@ -463,7 +449,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 key={guide.id}
                 id={`practical-card-${guide.slug}`}
                 onClick={() => handleNav(`/plan-your-visit/${guide.slug}`)}
-                className="bg-white border border-[#E5E0D8] rounded-xl p-6 hover:border-[#2D5A38]/50 hover:bg-[#FAF8F4] transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
+                className="bg-white border border-[#E5E0D8] rounded-xl p-6 hover:border-[#2D5A38]/50 hover:bg-[#FAF8F4] hover:shadow-lg hover:-translate-y-0.5 transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -482,9 +468,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-[#F0EBE3] mt-4 flex items-center justify-between text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38]">
-                  <span>Read Guide & FAQs</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                <div className="pt-4 border-t border-[#F0EBE3] mt-4 flex items-center justify-between text-xs text-[#788177]">
+                  <span className="font-medium">Travel Logistics & FAQs</span>
                 </div>
               </div>
             ))}

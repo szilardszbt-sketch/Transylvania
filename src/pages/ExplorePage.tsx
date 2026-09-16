@@ -101,7 +101,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
         <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
           Discovery Hub
         </span>
-        <h1 className="font-brand text-4xl sm:text-5xl font-bold text-[#1B3322]">
+        <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] break-words">
           Explore Transylvania & Romania
         </h1>
         <p className="text-sm sm:text-base text-[#5D665B] max-w-3xl font-editorial leading-relaxed">
@@ -314,7 +314,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
                   onNavigate(`/destinations/${dest.slug}`);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between"
+                className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   <LocationImage
@@ -339,7 +339,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
                     </div>
 
                     <div className="absolute bottom-3 left-3 right-3 text-white z-10 pointer-events-none">
-                      <h3 className="font-brand text-2xl font-bold tracking-wide">
+                      <h3 className="font-brand text-xl min-[380px]:text-2xl font-bold tracking-wide break-words">
                         {dest.name}
                       </h3>
                       {dest.romanianName && dest.romanianName !== dest.name && (
@@ -368,12 +368,8 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
                   </div>
                 </div>
 
-                <div className="px-5 py-3 bg-[#F9F8F5] border-t border-[#EAE5DC] flex items-center justify-between text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38]">
+                <div className="px-5 py-3 bg-[#F9F8F5] border-t border-[#EAE5DC] flex items-center justify-between text-xs font-medium text-[#717A70]">
                   <span>Curated Regional Guide</span>
-                  <span className="inline-flex items-center gap-1">
-                    <span>Open Guide</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </span>
                 </div>
               </div>
             ))}

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BookMarked, Clock, ArrowRight, ChevronRight, Tag, Search, Sparkles, RefreshCw } from 'lucide-react';
+import { Tag, Search, Sparkles, RefreshCw } from 'lucide-react';
 import { articles } from '../data/articles';
 import { fetchWordPressPosts, normalizeTag } from '../services/wordpressBlog';
 import { WordPressPost } from '../types';
 import { BlogPostReaderModal } from '../components/blog/BlogPostReaderModal';
-import { PhotoCreditBadge } from '../components/common/PhotoCreditBadge';
-import { LocationImage } from '../components/common/LocationImage';
+import { BlogPostCard } from '../components/blog/BlogPostCard';
 import { SEO } from '../components/common/SEO';
 import { generateArticleSchema } from '../utils/seo';
 
@@ -27,7 +26,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
     let isMounted = true;
     setLoadingWp(true);
 
-    fetchWordPressPosts({ perPage: 30 })
+    fetchWordPressPosts({ perPage: 100 })
       .then((res) => {
         if (isMounted) {
           const posts = res.posts || [];
@@ -120,6 +119,24 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
     return matchesTag && matchesSearch;
   });
 
+  const staticArticlesAsPosts: WordPressPost[] = filteredStaticArticles.map(article => ({
+    id: article.id,
+    slug: article.slug,
+    title: article.title,
+    excerpt: article.excerpt,
+    contentHtml: `<p>${article.excerpt}</p>${article.content ? article.content.split('\n\n').map(p => `<p>${p}</p>`).join('') : ''}`,
+    date: article.publishedDate,
+    formattedDate: article.publishedDate,
+    link: `/articles/${article.slug}`,
+    heroImage: article.heroImage,
+    heroImageAlt: article.heroImageAlt || article.title,
+    heroImageCredit: article.heroImageCredit,
+    authorName: article.author.name,
+    categoryName: article.category,
+    tags: article.tags.map(t => t.toLowerCase().replace(/\s+/g, '-')),
+    readTime: article.readTime
+  }));
+
   const selectedPostSchema = selectedPost ? generateArticleSchema({
     title: selectedPost.title,
     excerpt: selectedPost.excerpt,
@@ -152,7 +169,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
                 </span>
               )}
             </span>
-            <h1 className="font-brand text-4xl sm:text-5xl font-bold text-[#1B3322]">
+            <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] break-words">
               Travel Journal & Dispatches
             </h1>
           </div>
@@ -207,146 +224,68 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
 
       {/* Primary Content Grid */}
       {hasWpData ? (
-        /* Render Live WordPress Articles */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredWpPosts.map(post => (
-            <div
-              key={post.id}
-              id={`blog-card-${post.slug}`}
-              onClick={() => setSelectedPost(post)}
-              className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative aspect-[16/10] overflow-hidden bg-[#EAE5DC]">
-                  {post.heroImage ? (
-                    <img
-                      src={post.heroImage}
-                      alt={post.heroImageAlt || post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#E5DFD4] text-[#717A70]">
-                      <BookMarked className="w-8 h-8" />
-                    </div>
-                  )}
-                  <span className="absolute top-3 left-3 px-2.5 py-1 bg-[#1C241E]/90 text-white rounded text-[10px] uppercase tracking-wider font-semibold backdrop-blur-xs">
-                    {post.categoryName || 'WordPress'}
-                  </span>
-                </div>
-
-                <div className="p-6 space-y-3">
-                  <div className="text-[11px] text-[#869187] flex items-center gap-2">
-                    <span>{post.formattedDate}</span>
-                    <span>&bull;</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {post.readTime}
-                    </span>
-                  </div>
-
-                  <h2 className="font-brand text-xl font-bold text-[#1B3322] group-hover:text-[#2D5A38] transition-colours leading-tight">
-                    {post.title}
-                  </h2>
-
-                  <p className="text-xs text-[#525B51] leading-relaxed line-clamp-3">
-                    {post.excerpt}
-                  </p>
-
-                  {/* Tags */}
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {post.tags.slice(0, 3).map((t, idx) => (
-                        <span key={idx} className="text-[10px] bg-[#F2EFE9] text-[#5A6359] px-2 py-0.5 rounded">
-                          #{t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-6 pt-0 border-t border-[#F2EEE8] mt-4 flex items-center justify-between">
-                <span className="text-xs text-[#717A70] font-editorial italic">
-                  By {post.authorName}
-                </span>
-                <span className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] inline-flex items-center gap-1 transition-colours">
-                  <span>Read Article</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* Fallback Curated Articles (Styled to site) */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredStaticArticles.map(article => (
-            <div
-              key={article.id}
-              id={`blog-card-${article.slug}`}
+        filteredWpPosts.length > 0 ? (
+          /* Render Live WordPress Articles with Standardized Cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredWpPosts.map(post => (
+              <BlogPostCard
+                key={post.id}
+                post={post}
+                onClick={() => setSelectedPost(post)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-2xl border border-[#E5E0D8] p-8 space-y-4">
+            <p className="font-brand text-xl text-[#1B3322]">No dispatches found</p>
+            <p className="text-xs text-[#717A70] max-w-md mx-auto">
+              No articles match your current topic filter or search term. Try resetting your filters to explore all journal entries.
+            </p>
+            <button
               onClick={() => {
-                onNavigate(`/articles/${article.slug}`);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setSelectedTag('all');
+                setSearchQuery('');
               }}
-              className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#1B3322] text-[#F3EFE8] text-xs font-semibold rounded-lg hover:bg-[#2D5A38] transition-colors cursor-pointer"
             >
-              <div>
-                <LocationImage
-                  src={article.heroImage}
-                  alt={article.heroImageAlt || article.title}
-                  locationName={article.title}
-                  credit={article.heroImageCredit}
-                  creditPosition="top-right"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  aspectRatioClassName="aspect-[16/10]"
-                  placeholderSubtitle={article.category}
-                >
-                  <span className="absolute top-3 left-3 px-2.5 py-1 bg-[#1C241E]/90 text-white rounded text-[10px] uppercase tracking-wider font-semibold backdrop-blur-xs z-10 pointer-events-none">
-                    {article.category}
-                  </span>
-                </LocationImage>
-
-                <div className="p-6 space-y-3">
-                  <div className="text-[11px] text-[#869187] flex items-center gap-2">
-                    <span>{article.publishedDate}</span>
-                    <span>&bull;</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {article.readTime}
-                    </span>
-                  </div>
-
-                  <h2 className="font-brand text-xl font-bold text-[#1B3322] group-hover:text-[#2D5A38] transition-colours leading-tight">
-                    {article.title}
-                  </h2>
-
-                  <p className="text-xs text-[#525B51] leading-relaxed line-clamp-3">
-                    {article.excerpt}
-                  </p>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1.5 pt-2">
-                    {article.tags.slice(0, 3).map((t, idx) => (
-                      <span key={idx} className="text-[10px] bg-[#F2EFE9] text-[#5A6359] px-2 py-0.5 rounded">
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 pt-0 border-t border-[#F2EEE8] mt-4 flex items-center justify-between">
-                <span className="text-xs text-[#717A70] font-editorial italic">
-                  By {article.author.name}
-                </span>
-                <span className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] inline-flex items-center gap-1 transition-colours">
-                  <span>Read Story</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reset All Filters
+            </button>
+          </div>
+        )
+      ) : (
+        staticArticlesAsPosts.length > 0 ? (
+          /* Fallback Curated Articles (Styled consistently) */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {staticArticlesAsPosts.map(post => (
+              <BlogPostCard
+                key={post.id}
+                post={post}
+                onClick={() => {
+                  onNavigate(`/articles/${post.slug}`);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-2xl border border-[#E5E0D8] p-8 space-y-4">
+            <p className="font-brand text-xl text-[#1B3322]">No dispatches found</p>
+            <p className="text-xs text-[#717A70] max-w-md mx-auto">
+              No articles match your current topic filter or search term.
+            </p>
+            <button
+              onClick={() => {
+                setSelectedTag('all');
+                setSearchQuery('');
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#1B3322] text-[#F3EFE8] text-xs font-semibold rounded-lg hover:bg-[#2D5A38] transition-colors cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reset All Filters
+            </button>
+          </div>
+        )
       )}
 
       {/* Reader Modal for WordPress Posts */}

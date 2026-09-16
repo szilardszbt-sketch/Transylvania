@@ -135,7 +135,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F4] text-[#2C332D] font-sans antialiased selection:bg-[#2D5A38]/20 selection:text-[#1B3322]">
+    <div className="min-h-screen flex flex-col bg-[#F8F7F4] text-[#2C332D] font-sans antialiased selection:bg-[#2D5A38]/20 selection:text-[#1B3322] overflow-x-hidden">
       {/* Global Brand Navigation Bar */}
       <Header
         currentPath={pathname}

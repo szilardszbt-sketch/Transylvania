@@ -44,7 +44,7 @@ export const HistoryCulturePage: React.FC<HistoryCulturePageProps> = ({ onNaviga
         <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
           Historical Context & Heritage
         </span>
-        <h1 className="font-brand text-4xl sm:text-5xl font-bold text-[#1B3322]">
+        <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] break-words">
           History & Culture of Transylvania
         </h1>
         <p className="text-sm sm:text-base text-[#5D665B] max-w-3xl font-editorial leading-relaxed">
@@ -76,7 +76,7 @@ export const HistoryCulturePage: React.FC<HistoryCulturePageProps> = ({ onNaviga
             onNavigate(`/articles/${filtered[0].slug}`);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all group cursor-pointer grid grid-cols-1 lg:grid-cols-12"
+          className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all group cursor-pointer grid grid-cols-1 lg:grid-cols-12"
         >
           <div className="lg:col-span-7">
             <LocationImage
@@ -106,7 +106,7 @@ export const HistoryCulturePage: React.FC<HistoryCulturePageProps> = ({ onNaviga
                 </span>
               </div>
 
-              <h2 className="font-brand text-2xl sm:text-3xl font-bold text-[#1B3322] group-hover:text-[#2D5A38] transition-colours leading-snug">
+              <h2 className="font-brand text-xl min-[380px]:text-2xl sm:text-3xl font-bold text-[#1B3322] group-hover:text-[#2D5A38] transition-colours leading-snug break-words">
                 {filtered[0].title}
               </h2>
 
@@ -118,10 +118,6 @@ export const HistoryCulturePage: React.FC<HistoryCulturePageProps> = ({ onNaviga
             <div className="pt-4 border-t border-[#F0EBE3] flex items-center justify-between">
               <span className="text-xs text-[#717A70] font-editorial italic">
                 By {filtered[0].author.name}
-              </span>
-              <span className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] inline-flex items-center gap-1">
-                <span>Read Full Essay</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </span>
             </div>
           </div>
@@ -137,7 +133,7 @@ export const HistoryCulturePage: React.FC<HistoryCulturePageProps> = ({ onNaviga
               onNavigate(`/articles/${article.slug}`);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between"
+            className="bg-white border border-[#E5E0D8] rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#2D5A38]/50 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between"
           >
             <div>
               <LocationImage
@@ -175,10 +171,6 @@ export const HistoryCulturePage: React.FC<HistoryCulturePageProps> = ({ onNaviga
             <div className="p-6 pt-0 border-t border-[#F2EEE8] mt-4 flex items-center justify-between">
               <span className="text-xs text-[#717A70] font-editorial italic">
                 {article.author.name}
-              </span>
-              <span className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] inline-flex items-center gap-1 transition-colours">
-                <span>Read Essay</span>
-                <ChevronRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>

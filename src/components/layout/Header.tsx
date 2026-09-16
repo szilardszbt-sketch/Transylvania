@@ -39,10 +39,10 @@ export const Header: React.FC<HeaderProps> = ({ currentPath = '/', activePath, o
             className="flex flex-col text-left group cursor-pointer focus:outline-none"
             aria-label="Transylvania - The Heart of Romania Home"
           >
-            <span className="font-brand text-2xl sm:text-3xl font-bold tracking-[0.08em] text-[#1B3322] group-hover:text-[#284B32] transition-colours leading-none">
+            <span className="font-brand text-xl min-[380px]:text-2xl sm:text-3xl font-bold tracking-[0.06em] min-[380px]:tracking-[0.08em] text-[#1B3322] group-hover:text-[#284B32] transition-colours leading-none">
               TRANSYLVANIA
             </span>
-            <span className="text-[10px] sm:text-[11px] font-sans tracking-[0.24em] uppercase text-[#737C72] group-hover:text-[#525B51] transition-colours mt-1">
+            <span className="text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-sans tracking-[0.18em] min-[380px]:tracking-[0.24em] uppercase text-[#737C72] group-hover:text-[#525B51] transition-colours mt-1">
               The Heart of Romania
             </span>
           </button>

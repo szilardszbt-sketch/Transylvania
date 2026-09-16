@@ -159,7 +159,7 @@ export const PracticalGuideDetailPage: React.FC<PracticalGuideDetailPageProps> =
           </div>
         </div>
 
-        <h1 className="font-brand text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1B3322] leading-tight tracking-tight">
+        <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1B3322] leading-tight tracking-tight break-words">
           {guide.title}
         </h1>
 
@@ -500,7 +500,7 @@ export const PracticalGuideDetailPage: React.FC<PracticalGuideDetailPageProps> =
                 onNavigate(`/plan-your-visit/${og.slug}`);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="bg-white border border-[#E5E0D8] rounded-xl p-5 hover:border-[#2D5A38] hover:bg-[#FAF8F4] transition-all cursor-pointer group flex flex-col justify-between shadow-2xs"
+              className="bg-white border border-[#E5E0D8] rounded-xl p-5 hover:border-[#2D5A38]/50 hover:bg-[#FAF8F4] hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group flex flex-col justify-between shadow-2xs"
             >
               <div className="space-y-2">
                 <span className="text-[11px] text-[#788476] font-medium flex items-center gap-1">
@@ -515,9 +515,8 @@ export const PracticalGuideDetailPage: React.FC<PracticalGuideDetailPageProps> =
                 </p>
               </div>
 
-              <div className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] pt-4 flex items-center justify-between border-t border-[#F2EEE8] mt-4">
-                <span>Read Full Guide</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              <div className="text-xs text-[#717A70] pt-4 flex items-center justify-between border-t border-[#F2EEE8] mt-4">
+                <span>Practical Travel Reference</span>
               </div>
             </div>
           ))}

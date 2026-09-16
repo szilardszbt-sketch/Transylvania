@@ -113,7 +113,7 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ slug, onNa
                 </span>
               </div>
 
-              <h1 className="font-brand text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#FAF8F5] leading-tight">
+              <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#FAF8F5] leading-tight break-words">
                 {article.title}
               </h1>
 
@@ -263,7 +263,7 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ slug, onNa
                     onNavigate(`/destinations/${d.slug}`);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="bg-white border border-[#E5E0D8] rounded-lg p-4 flex items-center justify-between hover:border-[#2D5A38] hover:bg-[#FAF8F4] transition-all cursor-pointer group"
+                  className="bg-white border border-[#E5E0D8] rounded-lg p-4 flex items-center justify-between hover:border-[#2D5A38]/50 hover:bg-[#FAF8F4] hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
                     <img src={d.heroImage} alt={d.heroImageAlt || d.name} className="w-12 h-12 rounded object-cover" />
@@ -272,7 +272,6 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ slug, onNa
                       <div className="text-[11px] text-[#717A70] line-clamp-1">{d.tagline}</div>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-[#8C928B] group-hover:text-[#2D5A38] group-hover:translate-x-1 transition-all shrink-0 ml-2" />
                 </div>
               ))}
             </div>
@@ -292,7 +291,7 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ slug, onNa
                   onNavigate(`/articles/${a.slug}`);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="bg-white border border-[#E5E0D8] rounded-xl p-5 hover:border-[#2D5A38] hover:bg-[#FAF8F4] transition-all cursor-pointer group flex flex-col justify-between"
+                className="bg-white border border-[#E5E0D8] rounded-xl p-5 hover:border-[#2D5A38]/50 hover:bg-[#FAF8F4] hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group flex flex-col justify-between"
               >
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-[#2D5A38]">{a.category}</span>
@@ -301,9 +300,8 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ slug, onNa
                   </h4>
                   <p className="text-xs text-[#525B51] line-clamp-2 mt-2">{a.excerpt}</p>
                 </div>
-                <div className="text-xs font-semibold text-[#1B3322] group-hover:text-[#2D5A38] pt-3 flex items-center justify-between border-t border-[#F2EEE8] mt-3">
-                  <span>Read Article</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
+                <div className="text-xs text-[#717A70] pt-3 flex items-center justify-between border-t border-[#F2EEE8] mt-3">
+                  <span className="font-editorial italic">By {a.author.name}</span>
                 </div>
               </div>
             ))}
