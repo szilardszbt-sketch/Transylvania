@@ -93,6 +93,11 @@ export default function App() {
       ? pathname.replace('/blog/', '')
       : searchParams.get('post');
     pageContent = <BlogPage onNavigate={navigate} initialPostSlug={postSlug} />;
+  } else if (pathname === '/admin' || pathname === '/admin/' || pathname.startsWith('/admin')) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/admin/index.html';
+    }
+    return null;
   } else if (pathname.startsWith('/destinations/')) {
     const destSlug = pathname.replace('/destinations/', '');
     pageContent = (

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Tag, Search, Sparkles, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Tag, Search, Sparkles, RefreshCw, PenLine } from 'lucide-react';
 import { articles } from '../data/articles';
 import { fetchWordPressPosts, normalizeTag } from '../services/wordpressBlog';
+import { getMarkdownBlogPosts, getMarkdownPostBySlug } from '../services/markdownBlog';
 import { WordPressPost } from '../types';
 import { BlogPostReaderModal } from '../components/blog/BlogPostReaderModal';
 import { BlogPostCard } from '../components/blog/BlogPostCard';
@@ -21,7 +22,10 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
   const [loadingWp, setLoadingWp] = useState<boolean>(true);
   const [selectedPost, setSelectedPost] = useState<WordPressPost | null>(null);
 
-  // Fetch WordPress posts on mount
+  // Load Git Markdown posts from content/blog/
+  const markdownPosts = useMemo(() => getMarkdownBlogPosts(), []);
+
+  // Fetch WordPress posts on mount if configured
   useEffect(() => {
     let isMounted = true;
     setLoadingWp(true);
@@ -33,13 +37,6 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
           setWpPosts(posts);
           setIsWpConfigured(res.configured);
           setLoadingWp(false);
-
-          if (initialPostSlug) {
-            const matched = posts.find(p => p.slug === initialPostSlug);
-            if (matched) {
-              setSelectedPost(matched);
-            }
-          }
         }
       })
       .catch(() => {
@@ -52,49 +49,72 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
     return () => {
       isMounted = false;
     };
-  }, [initialPostSlug]);
+  }, []);
 
-  // Handle fallback initialPostSlug from static articles if WP has no data
+  // Handle dynamic routing with initialPostSlug (matches markdown posts, WP posts, or static articles)
   useEffect(() => {
-    if (initialPostSlug && wpPosts.length === 0 && !loadingWp) {
-      const staticMatch = articles.find(a => a.slug === initialPostSlug);
-      if (staticMatch) {
-        setSelectedPost({
-          id: staticMatch.id,
-          slug: staticMatch.slug,
-          title: staticMatch.title,
-          excerpt: staticMatch.excerpt,
-          contentHtml: `<p>${staticMatch.excerpt}</p>${staticMatch.content ? staticMatch.content.split('\n\n').map(p => `<p>${p}</p>`).join('') : ''}`,
-          date: staticMatch.publishedDate,
-          formattedDate: staticMatch.publishedDate,
-          link: `/articles/${staticMatch.slug}`,
-          heroImage: staticMatch.heroImage,
-          heroImageAlt: staticMatch.heroImageAlt || staticMatch.title,
-          authorName: staticMatch.author.name,
-          categoryName: staticMatch.category,
-          tags: staticMatch.tags.map(t => t.toLowerCase().replace(/\s+/g, '-')),
-          readTime: staticMatch.readTime
-        });
+    if (!initialPostSlug) return;
+
+    // 1. Check Markdown posts from content/blog/
+    const mdMatch = getMarkdownPostBySlug(initialPostSlug);
+    if (mdMatch) {
+      setSelectedPost(mdMatch);
+      return;
+    }
+
+    // 2. Check WordPress posts
+    if (wpPosts.length > 0) {
+      const wpMatch = wpPosts.find(p => p.slug === initialPostSlug);
+      if (wpMatch) {
+        setSelectedPost(wpMatch);
+        return;
       }
     }
-  }, [initialPostSlug, wpPosts, loadingWp]);
+
+    // 3. Fallback to curated static articles
+    const staticMatch = articles.find(a => a.slug === initialPostSlug);
+    if (staticMatch) {
+      setSelectedPost({
+        id: staticMatch.id,
+        slug: staticMatch.slug,
+        title: staticMatch.title,
+        excerpt: staticMatch.excerpt,
+        contentHtml: `<p>${staticMatch.excerpt}</p>${staticMatch.content ? staticMatch.content.split('\n\n').map(p => `<p>${p}</p>`).join('') : ''}`,
+        date: staticMatch.publishedDate,
+        formattedDate: staticMatch.publishedDate,
+        link: `/articles/${staticMatch.slug}`,
+        heroImage: staticMatch.heroImage,
+        heroImageAlt: staticMatch.heroImageAlt || staticMatch.title,
+        heroImageCredit: staticMatch.heroImageCredit,
+        authorName: staticMatch.author.name,
+        categoryName: staticMatch.category,
+        tags: staticMatch.tags.map(t => t.toLowerCase().replace(/\s+/g, '-')),
+        readTime: staticMatch.readTime,
+        source: 'curated'
+      });
+    }
+  }, [initialPostSlug, wpPosts, markdownPosts]);
+
+  // Combine Markdown posts and WordPress posts (Markdown Git posts take precedence)
+  const livePosts: WordPressPost[] = useMemo(() => {
+    return [...markdownPosts, ...wpPosts];
+  }, [markdownPosts, wpPosts]);
 
   // Curated static fallback articles
   const staticArticles = articles.filter(a => a.type === 'blog' || a.type === 'itinerary');
 
-  // Determine if we are rendering WordPress posts or static articles
-  const hasWpData = wpPosts.length > 0;
+  const hasLivePosts = livePosts.length > 0;
 
   // Extract all tags for filtering
-  const allTags = hasWpData
-    ? Array.from(new Set(wpPosts.flatMap(p => p.tags)))
+  const allTags = hasLivePosts
+    ? Array.from(new Set(livePosts.flatMap(p => p.tags)))
     : Array.from(new Set(staticArticles.flatMap(a => a.tags)));
 
-  // Filter WordPress posts
+  // Filter live posts
   const qNorm = normalizeTag(searchQuery);
   const qLower = searchQuery.toLowerCase().trim();
 
-  const filteredWpPosts = wpPosts.filter(p => {
+  const filteredLivePosts = livePosts.filter(p => {
     const matchesTag = selectedTag === 'all' || p.tags.includes(selectedTag);
     const matchesSearch = !qLower || 
       p.title.toLowerCase().includes(qLower) || 
@@ -134,56 +154,93 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
     authorName: article.author.name,
     categoryName: article.category,
     tags: article.tags.map(t => t.toLowerCase().replace(/\s+/g, '-')),
-    readTime: article.readTime
+    readTime: article.readTime,
+    source: 'curated'
   }));
 
   const selectedPostSchema = selectedPost ? generateArticleSchema({
     title: selectedPost.title,
     excerpt: selectedPost.excerpt,
-    heroImage: selectedPost.heroImage || selectedPost.featuredImage,
+    heroImage: selectedPost.heroImage,
     publishedDate: selectedPost.date,
     slug: selectedPost.slug,
     author: { name: selectedPost.authorName }
   }, undefined, true) : undefined;
+
+  const handleOpenPost = (post: WordPressPost) => {
+    setSelectedPost(post);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', `/blog/${post.slug}`);
+    }
+  };
+
+  const handleClosePost = () => {
+    setSelectedPost(null);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', '/blog');
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 py-8">
       <SEO
         title={selectedPost ? `${selectedPost.title} — Transylvania Travel Journal` : "Transylvania Travel Journal & Dispatches | Independent Travel Blog"}
         description={selectedPost ? (selectedPost.excerpt || selectedPost.title) : "Field dispatches, cultural essays, road trip itineraries, and photography notes from Transylvania and Romania."}
-        canonicalPath={selectedPost ? `/blog?post=${selectedPost.slug}` : "/blog"}
-        image={selectedPost ? (selectedPost.heroImage || selectedPost.featuredImage) : undefined}
+        canonicalPath={selectedPost ? `/blog/${selectedPost.slug}` : "/blog"}
+        image={selectedPost ? selectedPost.heroImage : undefined}
         imageAlt={selectedPost ? (selectedPost.heroImageAlt || selectedPost.title) : undefined}
         type={selectedPost ? "article" : "website"}
         schema={selectedPostSchema}
       />
+
       {/* Header */}
       <div className="border-b border-[#E3DDD2] pb-8 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
-            <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38] flex items-center gap-1.5">
-              <span>Editorial & Field Notes</span>
-              {hasWpData && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
+                Editorial & Field Notes
+              </span>
+              {markdownPosts.length > 0 && (
                 <span className="px-2 py-0.5 bg-[#E8F0EA] text-[#2D5A38] text-[9px] font-bold rounded uppercase tracking-wider border border-[#D5E5D8]">
-                  Headless REST Connected
+                  Decap CMS & Git
                 </span>
               )}
-            </span>
+              {isWpConfigured && wpPosts.length > 0 && (
+                <span className="px-2 py-0.5 bg-[#F2ECE4] text-[#7A583A] text-[9px] font-bold rounded uppercase tracking-wider border border-[#E2D8CC]">
+                  WordPress
+                </span>
+              )}
+            </div>
             <h1 className="font-brand text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B3322] break-words">
               Travel Journal & Dispatches
             </h1>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-[#869187] absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search articles & guides..."
-              className="w-full pl-9 pr-4 py-2 bg-white border border-[#DDD6C8] rounded-xl text-xs text-[#1B3322] focus:outline-hidden focus:border-[#2D5A38] placeholder:text-[#8E978C] shadow-2xs"
-            />
+          {/* Right Action & Search Area */}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Search Bar */}
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-4 h-4 text-[#869187] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search articles & guides..."
+                className="w-full pl-9 pr-4 py-2 bg-white border border-[#DDD6C8] rounded-xl text-xs text-[#1B3322] focus:outline-hidden focus:border-[#2D5A38] placeholder:text-[#8E978C] shadow-2xs"
+              />
+            </div>
+
+            {/* Admin CMS Access Link */}
+            <a
+              href="/admin/"
+              id="cms-admin-link"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F4EFE6] text-[#1B3322] border border-[#DDD6C8] rounded-xl text-xs font-semibold tracking-wide transition-colors cursor-pointer shadow-2xs shrink-0"
+              title="Open Decap CMS Admin Panel"
+            >
+              <PenLine className="w-3.5 h-3.5 text-[#2D5A38]" />
+              <span className="hidden sm:inline">CMS Admin</span>
+            </a>
           </div>
         </div>
 
@@ -203,7 +260,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
                   : 'bg-[#EFECE6] text-[#495248] hover:bg-[#E2DDD3]'
               }`}
             >
-              All Articles ({hasWpData ? wpPosts.length : staticArticles.length})
+              All Articles ({hasLivePosts ? livePosts.length : staticArticles.length})
             </button>
             {allTags.map(tag => (
               <button
@@ -223,15 +280,15 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
       </div>
 
       {/* Primary Content Grid */}
-      {hasWpData ? (
-        filteredWpPosts.length > 0 ? (
-          /* Render Live WordPress Articles with Standardized Cards */
+      {hasLivePosts ? (
+        filteredLivePosts.length > 0 ? (
+          /* Render Live Articles with Standardized Cards */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredWpPosts.map(post => (
+            {filteredLivePosts.map(post => (
               <BlogPostCard
                 key={post.id}
                 post={post}
-                onClick={() => setSelectedPost(post)}
+                onClick={() => handleOpenPost(post)}
               />
             ))}
           </div>
@@ -288,15 +345,10 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
         )
       )}
 
-      {/* Reader Modal for WordPress Posts */}
+      {/* Reader Modal for Blog Posts */}
       <BlogPostReaderModal
         post={selectedPost}
-        onClose={() => {
-          setSelectedPost(null);
-          if (window.location.search.includes('post=')) {
-            window.history.replaceState({}, '', '/blog');
-          }
-        }}
+        onClose={handleClosePost}
       />
     </div>
   );

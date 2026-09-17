@@ -265,5 +265,6 @@ export interface WordPressPost {
   tags: string[];
   tagIds?: number[];
   readTime: string;
+  source?: 'markdown' | 'wordpress' | 'curated';
 }
 

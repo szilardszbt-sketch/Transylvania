@@ -31,7 +31,7 @@ export const BlogPostReaderModal: React.FC<BlogPostReaderModalProps> = ({ post, 
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#E8E2D8]">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded bg-[#1B3322] text-white text-[10px] uppercase font-bold tracking-wider">
-              {post.categoryName || 'WordPress Journal'}
+              {post.categoryName || (post.source === 'markdown' ? 'Field Journal' : 'Journal Dispatch')}
             </span>
             <span className="text-xs text-[#717A70] flex items-center gap-1">
               <Clock className="w-3 h-3" />
@@ -132,7 +132,7 @@ export const BlogPostReaderModal: React.FC<BlogPostReaderModalProps> = ({ post, 
         {/* Footer Bar */}
         <div className="px-6 py-4 bg-[#F5F2EC] border-t border-[#E8E2D8] flex items-center justify-between">
           <span className="text-xs text-[#717A70] font-editorial italic">
-            Connected via WordPress REST API
+            {post.source === 'markdown' ? 'Published via Decap CMS & Git' : 'Transylvania Travel Journal'}
           </span>
           <button
             onClick={onClose}
