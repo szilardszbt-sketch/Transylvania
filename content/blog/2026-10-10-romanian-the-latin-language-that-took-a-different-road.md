@@ -1,6 +1,6 @@
 ---
 title: Romanian   The Latin Language That Took a Different Road
-date: 2026-10-10T02:00:00.000+01:00
+date: 2026-09-25T21:25:00.000+01:00
 image: /uploads/romanian-the-latin-language.jpeg
 ---
 If you speak a little Italian, Spanish or French, Romanian can give you a strange feeling of recognition. You may hear a word and think, *I know that one.*  Then the next sentence arrives and suddenly you are reminded that Romanian has spent nearly two thousand years travelling on a very different road from its Western Romance cousins. 
