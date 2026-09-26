@@ -1,0 +1,22 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "blog"
+    label: "Blog Posts"
+    folder: "content/blog"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Publish Date", name: "date", widget: "datetime" }
+      - { label: "Author", name: "author", widget: "string", default: "The Traveller", required: false }
+      - { label: "Featured Image", name: "image", widget: "image", required: false }
+      - { label: "Category", name: "category", widget: "select", options: ["Field Journal", "Destination Guide", "Practical Guide", "Heritage & Culture", "Road Trip Itinerary"], default: "Field Journal", required: false }
+      - { label: "Excerpt / Short Description", name: "description", widget: "text", required: false }
+      - { label: "Tags / Location Keywords", name: "tags", widget: "list", required: false, hint: "Destination slugs or topics (e.g. praid, targu-mures, turda, salt-mine, hiking, transylvania)" }
+      - { label: "Body Content", name: "body", widget: "markdown" }

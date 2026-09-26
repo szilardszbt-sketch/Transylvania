@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Cinzel', serif;
+    --font-editorial: 'Newsreader', serif;
+    --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: #232724;
+    background-color: #F8F7F4;
+  }
+
+  h1, h2, h3, .brand-title {
+    font-family: var(--font-heading);
+    letter-spacing: 0.04em;
+    overflow-wrap: break-word;
+  }
+}
+
+.font-brand {
+  font-family: 'Cinzel', serif;
+}
+
+.font-editorial {
+  font-family: 'Newsreader', Georgia, serif;
+}
+
+.font-sans-body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F2EFE9;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1C7BA;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B3A798;
+}
+
