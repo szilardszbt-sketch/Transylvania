@@ -2197,19 +2197,19 @@ const rawDestinations: Destination[] = [
     tagline: 'Colossal subterranean healing salt city, underground chapel & salt canyon',
     shortDescription: 'One of Europe’s largest subterranean salt bodies, featuring a vast subterranean world 120 metres underground with an ecumenical salt-carved church, high-ionization halotherapy chambers, wine tasting cellars, and the unique outdoor Praid Salt Canyon.',
     fullIntroduction: 'Nestled in the heart of Transylvania’s "Salt Country" (Ținutul Sării / Sóvidék) at the base of the Gurghiu Mountains, Salina Praid sits atop an immense diapiric salt body extending nearly 3 kilometres deep into the earth. Mined since Roman antiquity, Praid transformed its subterranean horizons into an expansive underground wellness haven. Visitors travel by dedicated electric buses deep into the mountain, stepping out into colossal 14-metre-high chambers where the ionized microclimate offers renowned respiratory relief. Down below lies Saint John of Nepomuk ecumenical church carved directly into solid rock salt, an underground adventure park, museum, and cafe.',
-    heroImage: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1600&q=80',
-    heroImageCredit: 'Salina Praid Archive',
-    heroImageAlt: 'Salina Praid subterranean salt cavern and illuminated chamber',
+    heroImage: '/uploads/salina-praid-interior.jpg',
+    heroImageCredit: 'Octav Druta / Wikimedia Commons (CC BY-SA 3.0)',
+    heroImageAlt: 'Salina Praid subterranean salt cavern and illuminated chamber in Harghita, Transylvania',
     gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
+        url: '/uploads/salina-praid-interior.jpg',
         caption: 'The vast subterranean halls of Salina Praid 120 metres underground.',
         alt: 'Salina Praid subterranean hall'
       },
       {
-        url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
-        caption: 'The dramatic white salt ridges and karst spires of Praid Salt Canyon.',
-        alt: 'Praid Salt Canyon'
+        url: '/uploads/salina-praid-bus-entrance.jpg',
+        caption: 'Dedicated transport entering the subterranean tunnel of Salina Praid.',
+        alt: 'Salina Praid mine transport entrance'
       }
     ],
     goodToKnow: {
@@ -2263,7 +2263,7 @@ const rawDestinations: Destination[] = [
         category: 'Nature & Viewpoint',
         shortDescription: 'Colossal subterranean wellness world 120 metres underground with an ecumenical church carved into rock salt, adventure rope park, and halotherapy halls.',
         whyInteresting: 'Carved inside an ancient salt mountain with 14-metre-high vaulted chambers, featuring the underground Saint John of Nepomuk Chapel where services in Romanian, Hungarian, and German are held.',
-        heroImage: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1000&q=80',
+        heroImage: '/uploads/salina-praid-interior.jpg',
         imageAlt: 'Salina Praid underground church and salt chambers',
         visitDuration: '2.5 - 3.5 hours',
         admissionNotes: 'Admission includes bus transfer down into the mine'

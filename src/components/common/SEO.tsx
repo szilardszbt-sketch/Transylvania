@@ -75,10 +75,13 @@ export const SEO: React.FC<SEOProps> = ({
   schema
 }) => {
   const origin = getCanonicalOrigin();
-  const fullTitle = formatMetaTitle(title);
-  const fullDescription = description?.trim() || DEFAULT_SITE_DESCRIPTION;
+  const safeTitle = typeof title === 'string' ? title : '';
+  const fullTitle = formatMetaTitle(safeTitle);
+  const fullDescription = typeof description === 'string' && description.trim().length > 0 
+    ? description.trim() 
+    : DEFAULT_SITE_DESCRIPTION;
 
-  const fullCanonicalUrl = canonicalPath
+  const fullCanonicalUrl = typeof canonicalPath === 'string' && canonicalPath.trim().length > 0
     ? canonicalPath.startsWith('http')
       ? canonicalPath
       : `${origin}${canonicalPath.startsWith('/') ? '' : '/'}${canonicalPath}`
@@ -86,29 +89,32 @@ export const SEO: React.FC<SEOProps> = ({
       ? `${origin}${window.location.pathname}`
       : `${origin}/`;
 
-  const rawImage = image || '/images/bucin_peak_winter_hero_1787137385478.jpg';
+  const rawImage = typeof image === 'string' && image.trim().length > 0 
+    ? image.trim() 
+    : '/images/bucin_peak_winter_hero_1787137385478.jpg';
   const fullImageUrl = rawImage.startsWith('http')
     ? rawImage
     : `${origin}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`;
 
   useEffect(() => {
-    // 1. Title
-    document.title = fullTitle;
+    try {
+      // 1. Title
+      document.title = fullTitle;
 
-    // 2. Primary meta description
-    updateOrCreateMeta('name', 'description', fullDescription);
+      // 2. Primary meta description
+      updateOrCreateMeta('name', 'description', fullDescription);
 
-    // 3. Open Graph
-    updateOrCreateMeta('property', 'og:title', fullTitle);
-    updateOrCreateMeta('property', 'og:description', fullDescription);
-    updateOrCreateMeta('property', 'og:type', type);
-    updateOrCreateMeta('property', 'og:url', fullCanonicalUrl);
-    updateOrCreateMeta('property', 'og:image', fullImageUrl);
-    updateOrCreateMeta('property', 'og:site_name', DEFAULT_SITE_TITLE);
-    updateOrCreateMeta('property', 'og:locale', 'en_US');
-    if (imageAlt) {
-      updateOrCreateMeta('property', 'og:image:alt', imageAlt);
-    }
+      // 3. Open Graph
+      updateOrCreateMeta('property', 'og:title', fullTitle);
+      updateOrCreateMeta('property', 'og:description', fullDescription);
+      updateOrCreateMeta('property', 'og:type', type);
+      updateOrCreateMeta('property', 'og:url', fullCanonicalUrl);
+      updateOrCreateMeta('property', 'og:image', fullImageUrl);
+      updateOrCreateMeta('property', 'og:site_name', DEFAULT_SITE_TITLE);
+      updateOrCreateMeta('property', 'og:locale', 'en_US');
+      if (imageAlt && typeof imageAlt === 'string') {
+        updateOrCreateMeta('property', 'og:image:alt', imageAlt);
+      }
 
     if (type === 'article') {
       if (publishedTime) {
@@ -136,6 +142,9 @@ export const SEO: React.FC<SEOProps> = ({
 
     // 6. Schema.org JSON-LD
     updateOrCreateJsonLd(schema);
+  } catch (err) {
+    console.warn('Safe catch: SEO meta update warning:', err);
+  }
   }, [
     fullTitle,
     fullDescription,

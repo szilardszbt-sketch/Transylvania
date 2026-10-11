@@ -6,6 +6,7 @@ import { getMarkdownBlogPosts, getMarkdownPostBySlug } from '../services/markdow
 import { WordPressPost } from '../types';
 import { BlogPostReaderModal } from '../components/blog/BlogPostReaderModal';
 import { BlogPostCard } from '../components/blog/BlogPostCard';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { SEO } from '../components/common/SEO';
 import { generateArticleSchema } from '../utils/seo';
 
@@ -105,38 +106,70 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
 
   const hasLivePosts = livePosts.length > 0;
 
-  // Extract all tags for filtering
+  // Extract all tags safely for filtering
   const allTags = hasLivePosts
-    ? Array.from(new Set(livePosts.flatMap(p => p.tags)))
-    : Array.from(new Set(staticArticles.flatMap(a => a.tags)));
+    ? Array.from(new Set(
+        livePosts
+          .flatMap(p => Array.isArray(p?.tags) ? p.tags : [])
+          .filter((t): t is string => typeof t === 'string' && Boolean(t.trim()))
+      ))
+    : Array.from(new Set(
+        staticArticles
+          .flatMap(a => Array.isArray(a?.tags) ? a.tags : [])
+          .filter((t): t is string => typeof t === 'string' && Boolean(t.trim()))
+      ));
 
-  // Filter live posts
+  // Filter live posts safely
   const qNorm = normalizeTag(searchQuery);
   const qLower = searchQuery.toLowerCase().trim();
 
   const filteredLivePosts = livePosts.filter(p => {
-    const matchesTag = selectedTag === 'all' || p.tags.includes(selectedTag);
-    const matchesSearch = !qLower || 
-      p.title.toLowerCase().includes(qLower) || 
-      p.excerpt.toLowerCase().includes(qLower) ||
-      (qNorm && normalizeTag(p.title).includes(qNorm)) ||
-      (qNorm && normalizeTag(p.excerpt).includes(qNorm)) ||
-      (p.categoryName && (p.categoryName.toLowerCase().includes(qLower) || (qNorm && normalizeTag(p.categoryName).includes(qNorm)))) ||
-      (p.tags && p.tags.some(t => t.toLowerCase().includes(qLower) || (qNorm && normalizeTag(t).includes(qNorm)) || qLower.includes(t.toLowerCase())));
-    return matchesTag && matchesSearch;
+    if (!p) return false;
+    const postTags = Array.isArray(p.tags) ? p.tags.filter((t): t is string => typeof t === 'string') : [];
+    const matchesTag = selectedTag === 'all' || postTags.includes(selectedTag);
+    if (!matchesTag) return false;
+    if (!qLower) return true;
+
+    const titleStr = typeof p.title === 'string' ? p.title.toLowerCase() : '';
+    const excerptStr = typeof p.excerpt === 'string' ? p.excerpt.toLowerCase() : '';
+    const catStr = typeof p.categoryName === 'string' ? p.categoryName.toLowerCase() : '';
+
+    return (
+      titleStr.includes(qLower) ||
+      excerptStr.includes(qLower) ||
+      catStr.includes(qLower) ||
+      (qNorm && normalizeTag(titleStr).includes(qNorm)) ||
+      (qNorm && normalizeTag(excerptStr).includes(qNorm)) ||
+      postTags.some(t => {
+        const tLower = t.toLowerCase();
+        return tLower.includes(qLower) || (qNorm && normalizeTag(tLower).includes(qNorm));
+      })
+    );
   });
 
-  // Filter static articles
+  // Filter static articles safely
   const filteredStaticArticles = staticArticles.filter(a => {
-    const matchesTag = selectedTag === 'all' || a.tags.includes(selectedTag);
-    const matchesSearch = !qLower || 
-      a.title.toLowerCase().includes(qLower) || 
-      a.excerpt.toLowerCase().includes(qLower) ||
-      (qNorm && normalizeTag(a.title).includes(qNorm)) ||
-      (qNorm && normalizeTag(a.excerpt).includes(qNorm)) ||
-      (a.category && (a.category.toLowerCase().includes(qLower) || (qNorm && normalizeTag(a.category).includes(qNorm)))) ||
-      (a.tags && a.tags.some(t => t.toLowerCase().includes(qLower) || (qNorm && normalizeTag(t).includes(qNorm)) || qLower.includes(t.toLowerCase())));
-    return matchesTag && matchesSearch;
+    if (!a) return false;
+    const articleTags = Array.isArray(a.tags) ? a.tags.filter((t): t is string => typeof t === 'string') : [];
+    const matchesTag = selectedTag === 'all' || articleTags.includes(selectedTag);
+    if (!matchesTag) return false;
+    if (!qLower) return true;
+
+    const titleStr = typeof a.title === 'string' ? a.title.toLowerCase() : '';
+    const excerptStr = typeof a.excerpt === 'string' ? a.excerpt.toLowerCase() : '';
+    const catStr = typeof a.category === 'string' ? a.category.toLowerCase() : '';
+
+    return (
+      titleStr.includes(qLower) ||
+      excerptStr.includes(qLower) ||
+      catStr.includes(qLower) ||
+      (qNorm && normalizeTag(titleStr).includes(qNorm)) ||
+      (qNorm && normalizeTag(excerptStr).includes(qNorm)) ||
+      articleTags.some(t => {
+        const tLower = t.toLowerCase();
+        return tLower.includes(qLower) || (qNorm && normalizeTag(tLower).includes(qNorm));
+      })
+    );
   });
 
   const staticArticlesAsPosts: WordPressPost[] = filteredStaticArticles.map(article => ({
@@ -168,17 +201,12 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
   }, undefined, true) : undefined;
 
   const handleOpenPost = (post: WordPressPost) => {
-    setSelectedPost(post);
-    if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', `/blog/${post.slug}`);
-    }
+    onNavigate(`/blog/${post.slug}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleClosePost = () => {
     setSelectedPost(null);
-    if (typeof window !== 'undefined') {
-      window.history.replaceState({}, '', '/blog');
-    }
   };
 
   return (
@@ -285,11 +313,12 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
           /* Render Live Articles with Standardized Cards */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredLivePosts.map(post => (
-              <BlogPostCard
-                key={post.id}
-                post={post}
-                onClick={() => handleOpenPost(post)}
-              />
+              <ErrorBoundary key={post.id} variant="card">
+                <BlogPostCard
+                  post={post}
+                  onClick={() => handleOpenPost(post)}
+                />
+              </ErrorBoundary>
             ))}
           </div>
         ) : (
@@ -315,14 +344,15 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
           /* Fallback Curated Articles (Styled consistently) */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {staticArticlesAsPosts.map(post => (
-              <BlogPostCard
-                key={post.id}
-                post={post}
-                onClick={() => {
-                  onNavigate(`/articles/${post.slug}`);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
+              <ErrorBoundary key={post.id} variant="card">
+                <BlogPostCard
+                  post={post}
+                  onClick={() => {
+                    onNavigate(`/blog/${post.slug}`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </ErrorBoundary>
             ))}
           </div>
         ) : (

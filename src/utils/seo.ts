@@ -102,52 +102,80 @@ export function generateDestinationSchema(
  */
 export function generateArticleSchema(
   post: {
-    title: string;
+    title?: string;
     excerpt?: string;
     heroImage?: string;
     publishedDate?: string;
     date?: string;
-    slug: string;
-    author?: { name: string; role?: string };
+    slug?: string;
+    author?: { name?: string; role?: string } | string;
   },
   siteOrigin: string = getCanonicalOrigin(),
   isWpPost: boolean = false
 ): Record<string, any> {
-  const pageUrl = isWpPost ? `${siteOrigin}/blog/${post.slug}` : `${siteOrigin}/articles/${post.slug}`;
-  const rawImage = post.heroImage || '';
-  const imageUrl = rawImage.startsWith('http')
-    ? rawImage
-    : `${siteOrigin}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`;
-  const pubDate = post.publishedDate || post.date;
+  try {
+    const slug = typeof post?.slug === 'string' && post.slug.trim().length > 0 ? post.slug.trim() : 'journal';
+    const pageUrl = isWpPost ? `${siteOrigin}/blog/${slug}` : `${siteOrigin}/articles/${slug}`;
+    const rawImage = typeof post?.heroImage === 'string' ? post.heroImage.trim() : '';
+    const imageUrl = rawImage
+      ? rawImage.startsWith('http')
+        ? rawImage
+        : `${siteOrigin}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`
+      : undefined;
+    const pubDate = post?.publishedDate || post?.date || new Date().toISOString();
+    const title = typeof post?.title === 'string' && post.title.trim().length > 0 ? post.title.trim() : 'Field Journal Dispatch';
 
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.excerpt ? sanitizeHtmlToText(post.excerpt) : undefined,
-    url: pageUrl,
-    image: imageUrl || undefined,
-    datePublished: pubDate,
-    dateModified: pubDate,
-    author: {
-      '@type': 'Person',
-      name: post.author?.name || 'The Traveller',
-      jobTitle: post.author?.role || 'Explorer & Field Researcher'
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'TRANSYLVANIA — The Heart of Romania',
-      url: siteOrigin,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${siteOrigin}/images/bucin_peak_winter_hero_1787137385478.jpg`
+    let authorName = 'The Traveller';
+    let authorRole = 'Explorer & Field Researcher';
+
+    if (typeof post?.author === 'string' && post.author.trim().length > 0) {
+      authorName = post.author.trim();
+    } else if (post?.author && typeof post.author === 'object') {
+      if (typeof post.author.name === 'string' && post.author.name.trim().length > 0) {
+        authorName = post.author.name.trim();
       }
-    },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': pageUrl
+      if (typeof post.author.role === 'string' && post.author.role.trim().length > 0) {
+        authorRole = post.author.role.trim();
+      }
     }
-  };
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: title,
+      description: post?.excerpt && typeof post.excerpt === 'string' ? sanitizeHtmlToText(post.excerpt) : undefined,
+      url: pageUrl,
+      image: imageUrl,
+      datePublished: pubDate,
+      dateModified: pubDate,
+      author: {
+        '@type': 'Person',
+        name: authorName,
+        jobTitle: authorRole
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'TRANSYLVANIA — The Heart of Romania',
+        url: siteOrigin,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${siteOrigin}/images/bucin_peak_winter_hero_1787137385478.jpg`
+        }
+      },
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': pageUrl
+      }
+    };
+  } catch (err) {
+    console.warn('Safe catch: generateArticleSchema failed gracefully:', err);
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: 'Transylvania Travel Journal',
+      url: `${siteOrigin}/blog`
+    };
+  }
 }
 
 /**

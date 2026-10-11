@@ -7,6 +7,7 @@ import {
   isHistoryCulturePost,
   normalizeTag
 } from '../../services/wordpressBlog';
+import { getBlogPostsForDestination } from '../../services/markdownBlog';
 import { BlogPostReaderModal } from './BlogPostReaderModal';
 
 export interface FromTheBlogProps {
@@ -95,16 +96,26 @@ export const FromTheBlog: React.FC<FromTheBlogProps> = ({
     }
 
     setLoading(true);
+    const localPosts = getBlogPostsForDestination(tagSlug, maxPosts);
+
     fetchPostsByTagSlug(tagSlug)
       .then((res) => {
         if (isMounted) {
-          setPosts(res.posts || []);
+          const wpMatches = res.posts || [];
+          // Deduplicate by slug
+          const combined: WordPressPost[] = [...localPosts];
+          for (const wp of wpMatches) {
+            if (!combined.some(p => p.slug === wp.slug)) {
+              combined.push(wp);
+            }
+          }
+          setPosts(combined);
           setLoading(false);
         }
       })
       .catch(() => {
         if (isMounted) {
-          setPosts([]);
+          setPosts(localPosts);
           setLoading(false);
         }
       });
@@ -141,12 +152,12 @@ export const FromTheBlog: React.FC<FromTheBlogProps> = ({
               <a
                 key={post.id}
                 id={`compact-blog-preview-${post.slug}`}
-                href={`/blog?post=${post.slug}`}
+                href={`/blog/${post.slug}`}
                 onClick={(e) => {
                   if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
                     e.preventDefault();
                     if (onNavigate) {
-                      onNavigate(`/blog?post=${post.slug}`);
+                      onNavigate(`/blog/${post.slug}`);
                     } else {
                       setSelectedPost(post);
                     }
@@ -218,12 +229,12 @@ export const FromTheBlog: React.FC<FromTheBlogProps> = ({
             <a
               key={post.id}
               id={`history-blog-preview-${post.slug}`}
-              href={`/blog?post=${post.slug}`}
+              href={`/blog/${post.slug}`}
               onClick={(e) => {
                 if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
                   e.preventDefault();
                   if (onNavigate) {
-                    onNavigate(`/blog?post=${post.slug}`);
+                    onNavigate(`/blog/${post.slug}`);
                   } else {
                     setSelectedPost(post);
                   }

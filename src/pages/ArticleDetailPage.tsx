@@ -28,19 +28,39 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ slug, onNa
   const [heroImageError, setHeroImageError] = React.useState<boolean>(false);
   const article = articles.find(a => a.slug === slug) || articles[0];
 
-  const articleSchema = generateArticleSchema({
-    title: article.title,
-    excerpt: article.excerpt,
-    heroImage: article.heroImage,
-    publishedDate: article.publishedDate,
-    slug: article.slug,
-    author: article.author
-  });
-
   React.useEffect(() => {
     setHeroImageLoaded(false);
     setHeroImageError(false);
-  }, [article.heroImage]);
+  }, [article?.heroImage]);
+
+  if (!article) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
+        <h2 className="font-brand text-2xl font-bold text-[#1B3322]">Article Not Found</h2>
+        <p className="text-xs text-[#5D665B]">The requested reference article could not be located.</p>
+        <button
+          onClick={() => onNavigate('/')}
+          className="px-4 py-2 bg-[#1B3322] text-white text-xs font-semibold rounded-lg"
+        >
+          Return Home
+        </button>
+      </div>
+    );
+  }
+
+  let articleSchema: Record<string, any> = {};
+  try {
+    articleSchema = generateArticleSchema({
+      title: article.title,
+      excerpt: article.excerpt,
+      heroImage: article.heroImage,
+      publishedDate: article.publishedDate,
+      slug: article.slug,
+      author: article.author
+    });
+  } catch (err) {
+    console.warn('Safe catch: Error generating article schema:', err);
+  }
 
   const relatedDestinations = destinations.filter(d => 
     article.relatedDestinationIds?.includes(d.slug) || article.relatedDestinationIds?.includes(d.id)
@@ -49,7 +69,7 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ slug, onNa
   const otherArticles = articles.filter(a => a.id !== article.id).slice(0, 2);
 
   // Render basic markdown / structured text
-  const paragraphs = article.content.trim().split('\n\n');
+  const paragraphs = (article.content || '').trim().split('\n\n');
 
   return (
     <div className="space-y-12 sm:space-y-16">

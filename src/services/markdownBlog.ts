@@ -8,64 +8,158 @@ export interface MarkdownBlogPost extends WordPressPost {
 }
 
 /**
+ * Destination reference interface for cross-linking
+ */
+export interface DestinationRef {
+  slug: string;
+  name?: string;
+  romanianName?: string;
+  hungarianName?: string;
+  regionId?: string;
+  regionName?: string;
+  gatewayCityId?: string;
+  nearbyDestinationIds?: string[];
+  categoryIds?: string[];
+}
+
+/**
+ * Safe custom marked renderer configuration
+ * Implements lazy loading, async decoding, and onerror fallback for all body images
+ */
+const customMarkdownRenderer = new marked.Renderer();
+
+customMarkdownRenderer.image = function({ href, title, text }) {
+  const safeHref = href || '';
+  const safeAlt = text || 'Transylvania field photograph';
+  const safeTitle = title ? ` title="${title}"` : '';
+  return `<figure class="my-6">
+    <img src="${safeHref}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" class="rounded-xl shadow-md w-full max-h-[520px] object-cover transition-opacity duration-300" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');" />
+    <div class="hidden bg-[#FAF8F5] border border-[#E5DFD4] rounded-xl p-5 text-center space-y-1 my-4">
+      <div class="w-8 h-8 mx-auto rounded-full bg-[#EFECE6] text-[#717A70] flex items-center justify-center text-xs font-mono">📷</div>
+      <p class="text-xs font-editorial italic text-[#5D665B]">${safeAlt}</p>
+      <span class="inline-block text-[10px] uppercase tracking-wider text-[#869187] font-sans">Photograph archive reference</span>
+    </div>
+    ${text ? `<figcaption class="mt-2 text-center text-xs text-[#5D665B] font-editorial italic">${text}</figcaption>` : ''}
+  </figure>`;
+};
+
+customMarkdownRenderer.link = function({ href, title, text }) {
+  const safeHref = href || '#';
+  const isExternal = safeHref.startsWith('http://') || safeHref.startsWith('https://');
+  const rel = isExternal ? ' rel="noopener noreferrer" target="_blank"' : '';
+  const titleAttr = title ? ` title="${title}"` : '';
+  return `<a href="${safeHref}"${titleAttr}${rel} class="text-[#2D5A38] underline font-medium hover:text-[#1B3322] transition-colors">${text}</a>`;
+};
+
+// Register custom renderer
+marked.use({ renderer: customMarkdownRenderer });
+
+/**
  * Parses simple YAML-like frontmatter from a markdown string.
+ * Safe against syntax errors, UTF-8 BOM, multiline folded scalars (>- and |), and missing closing delimiters.
  */
 function parseFrontmatterAndBody(raw: string): {
-  frontmatter: Record<string, string | string[]>;
+  frontmatter: Record<string, any>;
   body: string;
 } {
-  const frontmatter: Record<string, string | string[]> = {};
-  let body = raw;
+  const frontmatter: Record<string, any> = {};
+  if (!raw || typeof raw !== 'string') {
+    return { frontmatter, body: '' };
+  }
 
-  // Check for --- ... --- block
-  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  if (match) {
-    const rawYaml = match[1];
-    body = match[2].trim();
+  // Remove potential UTF-8 Byte Order Mark (BOM)
+  const cleanRaw = raw.replace(/^\uFEFF/, '').trimStart();
+  let body = cleanRaw;
 
-    const lines = rawYaml.split('\n');
-    let currentKey = '';
-    let currentList: string[] | null = null;
+  try {
+    // Check for standard frontmatter block starting with ---
+    const match = cleanRaw.match(/^---\s*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)\s*\r?\n?([\s\S]*)$/);
+    if (match) {
+      const rawYaml = match[1];
+      body = (match[2] || '').trim();
 
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-      if (!line || line.startsWith('#')) continue;
+      const lines = rawYaml.split(/\r?\n/);
+      let currentKey = '';
+      let isList = false;
+      let isMultilineScalar = false;
+      let multilineBuffer: string[] = [];
 
-      // Check for array item under a key (- tag)
-      if (line.startsWith('- ') && currentKey && currentList) {
-        const item = line.substring(2).trim().replace(/^["']|["']$/g, '');
-        if (item) currentList.push(item);
-        continue;
-      }
+      const flushScalar = () => {
+        if (currentKey && isMultilineScalar) {
+          frontmatter[currentKey] = multilineBuffer.join(' ').trim();
+          multilineBuffer = [];
+          isMultilineScalar = false;
+        }
+      };
 
-      // Check for key: value
-      const colonIndex = line.indexOf(':');
-      if (colonIndex !== -1) {
-        const key = line.slice(0, colonIndex).trim();
-        let value = line.slice(colonIndex + 1).trim();
+      for (const rawLine of lines) {
+        const line = rawLine.replace(/\s+$/, '');
+        const trimmed = line.trim();
 
-        currentKey = key;
-        currentList = null;
+        if (!trimmed || trimmed.startsWith('#')) continue;
 
-        // If it starts with [ and ends with ], parse inline array
-        if (value.startsWith('[') && value.endsWith(']')) {
-          const items = value
-            .slice(1, -1)
-            .split(',')
-            .map(s => s.trim().replace(/^["']|["']$/g, ''))
-            .filter(Boolean);
-          frontmatter[key] = items;
-        } else if (value === '' || value === '>-' || value === '|') {
-          // Could be multiline or list
-          currentList = [];
-          frontmatter[key] = currentList;
-        } else {
-          // Strip quotes
-          value = value.replace(/^["']|["']$/g, '');
-          frontmatter[key] = value;
+        // Check if this line is part of a multiline block scalar
+        if (isMultilineScalar && (rawLine.startsWith('  ') || rawLine.startsWith('\t'))) {
+          multilineBuffer.push(trimmed);
+          continue;
+        } else if (isMultilineScalar) {
+          flushScalar();
+        }
+
+        // Check for list item (- item) under a key
+        if (trimmed.startsWith('- ') && currentKey && isList) {
+          const item = trimmed.substring(2).trim().replace(/^["']|["']$/g, '');
+          if (item) {
+            if (!Array.isArray(frontmatter[currentKey])) {
+              frontmatter[currentKey] = [];
+            }
+            (frontmatter[currentKey] as string[]).push(item);
+          }
+          continue;
+        }
+
+        // Key: value line
+        const colonIndex = line.indexOf(':');
+        if (colonIndex !== -1) {
+          flushScalar();
+
+          const key = line.slice(0, colonIndex).trim();
+          let value = line.slice(colonIndex + 1).trim();
+
+          currentKey = key;
+
+          if (value === '>-' || value === '>' || value === '|' || value === '|-') {
+            isMultilineScalar = true;
+            multilineBuffer = [];
+            isList = false;
+          } else if (value === '' || value === '[]') {
+            isList = true;
+            isMultilineScalar = false;
+            frontmatter[key] = [];
+          } else if (value.startsWith('[') && value.endsWith(']')) {
+            isList = false;
+            isMultilineScalar = false;
+            const items = value
+              .slice(1, -1)
+              .split(',')
+              .map(s => s.trim().replace(/^["']|["']$/g, ''))
+              .filter(Boolean);
+            frontmatter[key] = items;
+          } else {
+            isList = false;
+            isMultilineScalar = false;
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+              value = value.slice(1, -1);
+            }
+            frontmatter[key] = value;
+          }
         }
       }
+
+      flushScalar();
     }
+  } catch (err) {
+    console.warn('Safe catch: Error parsing markdown frontmatter:', err);
   }
 
   return { frontmatter, body };
@@ -75,7 +169,7 @@ function parseFrontmatterAndBody(raw: string): {
  * Formats an ISO or date string into standard human-readable display.
  */
 function formatBlogDate(dateStr?: string): string {
-  if (!dateStr) return 'Field Dispatch';
+  if (!dateStr || typeof dateStr !== 'string') return 'Field Dispatch';
   try {
     const d = new Date(dateStr);
     if (!isNaN(d.getTime())) {
@@ -95,9 +189,24 @@ function formatBlogDate(dateStr?: string): string {
  * Estimates reading time from text content.
  */
 function calculateReadingTime(text: string): string {
+  if (!text || typeof text !== 'string') return '3 min read';
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.ceil(words / 200));
   return `${minutes} min read`;
+}
+
+/**
+ * Normalizes text to lowercase alphanumeric without diacritics for flexible matching.
+ */
+export function normalizeKeyword(input: string): string {
+  if (!input || typeof input !== 'string') return '';
+  return input
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 /**
@@ -114,6 +223,7 @@ let cachedPosts: MarkdownBlogPost[] | null = null;
 
 /**
  * Parses and returns all Markdown blog posts from content/blog/
+ * Safely handles any single corrupted markdown file without breaking the list.
  */
 export function getMarkdownBlogPosts(): MarkdownBlogPost[] {
   if (cachedPosts) {
@@ -123,63 +233,103 @@ export function getMarkdownBlogPosts(): MarkdownBlogPost[] {
   const posts: MarkdownBlogPost[] = [];
 
   for (const [filePath, rawContent] of Object.entries(rawMarkdownModules)) {
-    if (!rawContent || typeof rawContent !== 'string') continue;
-
-    // Derive file slug from path (e.g. /content/blog/2026-09-17-welcome-to-transylvania.md -> 2026-09-17-welcome-to-transylvania)
-    const filename = filePath.split('/').pop()?.replace(/\.(md|markdown)$/i, '') || 'dispatch';
-    const shortSlug = filename.replace(/^\d{4}-\d{2}-\d{2}-/, '');
-
-    const { frontmatter, body } = parseFrontmatterAndBody(rawContent);
-
-    const title = (frontmatter.title as string) || shortSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const rawDate = (frontmatter.date as string) || '';
-    const formattedDate = formatBlogDate(rawDate);
-    const heroImage = (frontmatter.image as string) || '';
-    const excerpt = (frontmatter.description as string) || (frontmatter.excerpt as string) || body.slice(0, 160).replace(/[#*`_\[\]]/g, '') + '...';
-    
-    // Parse tags
-    let tags: string[] = [];
-    if (Array.isArray(frontmatter.tags)) {
-      tags = frontmatter.tags.map(t => String(t).toLowerCase().replace(/\s+/g, '-'));
-    } else if (typeof frontmatter.tags === 'string') {
-      tags = frontmatter.tags.split(',').map(t => t.trim().toLowerCase().replace(/\s+/g, '-')).filter(Boolean);
-    }
-    if (tags.length === 0) {
-      tags = ['field-notes', 'transylvania'];
-    }
-
-    // Parse markdown body to HTML using marked
-    let contentHtml = '';
     try {
-      contentHtml = marked.parse(body, { async: false }) as string;
-    } catch (e) {
-      contentHtml = `<p>${body}</p>`;
+      if (!rawContent || typeof rawContent !== 'string') continue;
+
+      // Derive file slug from path (e.g. /content/blog/2026-09-17-welcome-to-transylvania.md -> 2026-09-17-welcome-to-transylvania)
+      const filename = filePath.split('/').pop()?.replace(/\.(md|markdown)$/i, '') || 'dispatch';
+      const shortSlug = filename.replace(/^\d{4}-\d{2}-\d{2}-/, '');
+
+      const { frontmatter, body } = parseFrontmatterAndBody(rawContent);
+
+      const rawTitle = typeof frontmatter.title === 'string' ? frontmatter.title.trim() : '';
+      const title = rawTitle || shortSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+      const rawDate = typeof frontmatter.date === 'string' ? frontmatter.date.trim() : '';
+      const formattedDate = formatBlogDate(rawDate);
+
+      const heroImage = typeof frontmatter.image === 'string' ? frontmatter.image.trim() : '';
+
+      let excerpt = '';
+      if (typeof frontmatter.description === 'string' && frontmatter.description.trim()) {
+        excerpt = frontmatter.description.trim();
+      } else if (typeof frontmatter.excerpt === 'string' && frontmatter.excerpt.trim()) {
+        excerpt = frontmatter.excerpt.trim();
+      } else {
+        const plainText = body
+          .replace(/!\[.*?\]\(.*?\)/g, '')
+          .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+          .replace(/[#*`_\[\]]/g, '')
+          .trim();
+        excerpt = plainText.slice(0, 160) + (plainText.length > 160 ? '...' : '');
+      }
+
+      // Parse tags safely into string[]
+      let tags: string[] = [];
+      if (Array.isArray(frontmatter.tags)) {
+        tags = frontmatter.tags
+          .filter((t: any): t is string => typeof t === 'string' && Boolean(t.trim()))
+          .map((t: string) => normalizeKeyword(t))
+          .filter(Boolean);
+      } else if (typeof frontmatter.tags === 'string' && frontmatter.tags.trim()) {
+        tags = frontmatter.tags
+          .split(',')
+          .map((t: string) => normalizeKeyword(t.trim()))
+          .filter(Boolean);
+      }
+      if (tags.length === 0) {
+        tags = ['field-notes', 'transylvania'];
+      }
+
+      // Parse markdown body to HTML using marked
+      let contentHtml = '';
+      try {
+        contentHtml = marked.parse(body, { async: false }) as string;
+      } catch (e) {
+        console.warn(`Safe catch: marked parsing error in ${filePath}:`, e);
+        contentHtml = `<p>${body.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`;
+      }
+
+      // Safe author name: NEVER an object or empty, default to "The Traveller"
+      let authorName = 'The Traveller';
+      if (typeof frontmatter.author === 'string' && frontmatter.author.trim()) {
+        authorName = frontmatter.author.trim();
+      } else if (frontmatter.author && typeof frontmatter.author === 'object') {
+        if (typeof frontmatter.author.name === 'string' && frontmatter.author.name.trim()) {
+          authorName = frontmatter.author.name.trim();
+        }
+      }
+
+      const categoryName = typeof frontmatter.category === 'string' && frontmatter.category.trim()
+        ? frontmatter.category.trim()
+        : 'Field Journal';
+
+      const readTime = calculateReadingTime(body);
+
+      posts.push({
+        id: `git-${filename}`,
+        slug: filename,
+        shortSlug,
+        title,
+        excerpt,
+        contentMarkdown: body,
+        contentHtml,
+        date: rawDate || new Date().toISOString(),
+        formattedDate,
+        link: `/blog/${filename}`,
+        heroImage,
+        heroImageAlt: title,
+        heroImageCredit: `Photo: ${authorName}`,
+        authorName,
+        categoryName,
+        tags,
+        readTime,
+        source: 'markdown'
+      });
+    } catch (postErr) {
+      console.error(`Safe catch: Error parsing markdown post file at ${filePath}:`, postErr);
+      // Skip this broken file to keep the application running
     }
-
-    const authorName = (frontmatter.author as string) || 'The Traveller';
-    const categoryName = (frontmatter.category as string) || 'Field Journal';
-    const readTime = calculateReadingTime(body);
-
-    posts.push({
-      id: `git-${filename}`,
-      slug: filename,
-      shortSlug,
-      title,
-      excerpt,
-      contentMarkdown: body,
-      contentHtml,
-      date: rawDate || new Date().toISOString(),
-      formattedDate,
-      link: `/blog/${filename}`,
-      heroImage,
-      heroImageAlt: title,
-      heroImageCredit: `Photo: ${authorName}`,
-      authorName,
-      categoryName,
-      tags,
-      readTime,
-      source: 'markdown'
-    });
   }
 
   // Sort posts in descending order by date (newest first)
@@ -194,13 +344,153 @@ export function getMarkdownBlogPosts(): MarkdownBlogPost[] {
 }
 
 /**
- * Finds a Markdown blog post by full slug or short slug.
+ * Finds a Markdown blog post by full slug, short slug, or sanitized title.
+ * Safe against missing/unmatched slugs.
  */
 export function getMarkdownPostBySlug(slug: string): MarkdownBlogPost | undefined {
-  const posts = getMarkdownBlogPosts();
-  const normalized = slug.toLowerCase().trim();
-  return posts.find(p => 
-    p.slug.toLowerCase() === normalized || 
-    p.shortSlug.toLowerCase() === normalized
-  );
+  if (!slug) return undefined;
+  try {
+    const posts = getMarkdownBlogPosts();
+    const normalized = normalizeKeyword(slug);
+    return posts.find(p => 
+      normalizeKeyword(p.slug) === normalized || 
+      normalizeKeyword(p.shortSlug) === normalized ||
+      normalizeKeyword(p.title) === normalized
+    );
+  } catch (err) {
+    console.error('Safe catch: getMarkdownPostBySlug failed:', err);
+    return undefined;
+  }
+}
+
+/**
+ * ISSUE 3 HELPER:
+ * Filters and ranks blog posts by matching tags, destination location slugs, or keywords.
+ * 
+ * Examples:
+ * - Matching Praid: matches posts tagged 'praid', 'salina-praid', 'salt-mine', 'harghita'
+ * - Matching Târgu Mureș: matches posts for Târgu Mureș or its regional hubs (Praid, Sovata)
+ * - Matching Turda: matches posts for 'turda', 'salina-turda', 'salt-mines'
+ * 
+ * Returns matching blog posts ordered by relevance score, then by newest date.
+ */
+export function getBlogPostsForDestination(
+  destinationOrSlug: DestinationRef | string,
+  limit: number = 6
+): MarkdownBlogPost[] {
+  try {
+    const allPosts = getMarkdownBlogPosts();
+    if (!allPosts || allPosts.length === 0) return [];
+
+    let targetSlug = '';
+    let targetKeywords: string[] = [];
+
+    if (typeof destinationOrSlug === 'string') {
+      targetSlug = normalizeKeyword(destinationOrSlug);
+      // Generate keywords from slug pieces (e.g. 'praid-salt-mine' -> ['praid-salt-mine', 'praid', 'salt', 'mine'])
+      targetKeywords = [
+        targetSlug,
+        ...targetSlug.split('-').filter(w => w.length > 2)
+      ];
+    } else if (destinationOrSlug && typeof destinationOrSlug === 'object') {
+      targetSlug = normalizeKeyword(destinationOrSlug.slug || '');
+      const slugWords = targetSlug.split('-').filter(w => w.length > 2);
+      
+      const nameKeywords = [
+        destinationOrSlug.name,
+        destinationOrSlug.romanianName,
+        destinationOrSlug.hungarianName
+      ]
+        .filter(Boolean)
+        .map(n => normalizeKeyword(n as string));
+
+      const nearbyKeywords = (destinationOrSlug.nearbyDestinationIds || []).map(normalizeKeyword);
+      const gatewayKeywords = destinationOrSlug.gatewayCityId ? [normalizeKeyword(destinationOrSlug.gatewayCityId)] : [];
+
+      targetKeywords = Array.from(new Set([
+        targetSlug,
+        ...slugWords,
+        ...nameKeywords,
+        ...nearbyKeywords,
+        ...gatewayKeywords
+      ]));
+    }
+
+    if (targetKeywords.length === 0) return [];
+
+    // Score posts based on match strength
+    const scoredPosts: { post: MarkdownBlogPost; score: number }[] = [];
+
+    for (const post of allPosts) {
+      let score = 0;
+      const postTagsNormalized = post.tags.map(normalizeKeyword);
+      const postTitleNormalized = normalizeKeyword(post.title);
+      const postSlugNormalized = normalizeKeyword(post.slug);
+      const postExcerptNormalized = normalizeKeyword(post.excerpt);
+
+      for (const kw of targetKeywords) {
+        if (!kw || kw.length < 3) continue;
+
+        // 1. Direct tag match (highest weight)
+        if (postTagsNormalized.includes(kw)) {
+          score += 10;
+        } else if (postTagsNormalized.some(t => t.includes(kw) || kw.includes(t))) {
+          score += 5;
+        }
+
+        // 2. Slug or shortSlug match
+        if (postSlugNormalized.includes(kw)) {
+          score += 8;
+        }
+
+        // 3. Title match
+        if (postTitleNormalized.includes(kw)) {
+          score += 6;
+        }
+
+        // 4. Excerpt match
+        if (postExcerptNormalized.includes(kw)) {
+          score += 2;
+        }
+      }
+
+      if (score > 0) {
+        scoredPosts.push({ post, score });
+      }
+    }
+
+    // Sort by highest score first, then newest date
+    scoredPosts.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return new Date(b.post.date).getTime() - new Date(a.post.date).getTime();
+    });
+
+    return scoredPosts.slice(0, limit).map(item => item.post);
+  } catch (err) {
+    console.error('Safe catch: getBlogPostsForDestination failed:', err);
+    return [];
+  }
+}
+
+/**
+ * Filter blog posts by freeform keywords or tag arrays
+ */
+export function filterBlogPostsByKeywords(
+  keywords: string[] | string,
+  limit: number = 6
+): MarkdownBlogPost[] {
+  const kwList = Array.isArray(keywords)
+    ? keywords.map(normalizeKeyword)
+    : [normalizeKeyword(keywords)];
+
+  const allPosts = getMarkdownBlogPosts();
+  return allPosts
+    .filter(post => {
+      const postTags = post.tags.map(normalizeKeyword);
+      const postText = normalizeKeyword(`${post.title} ${post.excerpt}`);
+      return kwList.some(kw => postTags.includes(kw) || postText.includes(kw));
+    })
+    .slice(0, limit);
 }

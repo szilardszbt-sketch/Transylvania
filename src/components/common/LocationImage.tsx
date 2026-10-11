@@ -15,6 +15,7 @@ export interface LocationImageProps {
   overlayGradient?: boolean;
   children?: React.ReactNode;
   placeholderSubtitle?: string;
+  loading?: 'lazy' | 'eager';
 }
 
 /**
@@ -22,9 +23,10 @@ export interface LocationImageProps {
  * 
  * Guarantees:
  * 1. Never renders photo credits/citations unless an authentic image has successfully loaded.
- * 2. If an image is missing or fails to load, gracefully shows a clean, branded "Photo Coming Soon" placeholder
+ * 2. If an image is missing or fails to load (404/network error), gracefully shows a clean, branded "Photo Coming Soon" placeholder
  *    using the site's authentic forest/earth palette and typography.
- * 3. Never produces broken visual cards or orphaned attribution badges.
+ * 3. Never throws runtime exceptions on invalid src types, undefined attributes, or failed network requests.
+ * 4. Defaults to lazy loading and asynchronous decoding to prevent memory and network bottlenecks on long pages.
  */
 export const LocationImage: React.FC<LocationImageProps> = ({
   src,
@@ -37,19 +39,23 @@ export const LocationImage: React.FC<LocationImageProps> = ({
   aspectRatioClassName = 'aspect-[16/10]',
   overlayGradient = true,
   children,
-  placeholderSubtitle
+  placeholderSubtitle,
+  loading = 'lazy'
 }) => {
+  // Sanitize src to guarantee a non-empty string or null
+  const cleanSrc = typeof src === 'string' && src.trim().length > 0 ? src.trim() : null;
+
   const [loadStatus, setLoadStatus] = useState<'loading' | 'loaded' | 'error'>(() => {
-    return src && src.trim().length > 0 ? 'loading' : 'error';
+    return cleanSrc ? 'loading' : 'error';
   });
 
   useEffect(() => {
-    if (!src || src.trim().length === 0) {
+    if (!cleanSrc) {
       setLoadStatus('error');
     } else {
       setLoadStatus('loading');
     }
-  }, [src]);
+  }, [cleanSrc]);
 
   const hasLoaded = loadStatus === 'loaded';
   const hasError = loadStatus === 'error';
@@ -57,10 +63,12 @@ export const LocationImage: React.FC<LocationImageProps> = ({
   return (
     <div className={`relative overflow-hidden ${aspectRatioClassName} ${containerClassName}`}>
       {/* 1. Real Image Element (Only active if src exists and not in error state) */}
-      {!hasError && src && (
+      {!hasError && cleanSrc && (
         <img
-          src={src}
-          alt={alt || locationName}
+          src={cleanSrc}
+          alt={alt || locationName || 'Transylvania destination photography'}
+          loading={loading}
+          decoding="async"
           onLoad={() => setLoadStatus('loaded')}
           onError={() => setLoadStatus('error')}
           className={`${className} ${hasLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}

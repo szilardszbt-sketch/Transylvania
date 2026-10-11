@@ -1,7 +1,16 @@
 ---
-title: Romanian   The Latin Language That Took a Different Road
-date: 2026-09-25T21:25:00.000+01:00
-image: /uploads/romanian-the-latin-language.jpeg
+title: "Romanian: The Latin Language That Took a Different Road"
+date: "2026-09-25T21:25:00.000+01:00"
+author: "The Traveller"
+category: "Culture & Language"
+image: "/uploads/romanian-the-latin-language.jpeg"
+description: "How spoken Latin survived, evolved, and was transformed by the Balkans into modern Romanian—a Romance language carrying nearly two thousand years of history."
+tags:
+  - language
+  - romanian-language
+  - latin
+  - history
+  - balkans
 ---
 If you speak a little Italian, Spanish or French, Romanian can give you a strange feeling of recognition. You may hear a word and think, *I know that one.*  Then the next sentence arrives and suddenly you are reminded that Romanian has spent nearly two thousand years travelling on a very different road from its Western Romance cousins. 
 
@@ -23,7 +32,7 @@ Like Italian, French, Spanish and Portuguese, Romanian ultimately developed from
  
 Exactly how Romanian developed during the centuries after Roman rule is still one of the more debated subjects in Balkan historical linguistics. There is a particularly large gap in the written record: the earliest surviving Romanian texts date from the 16th century, more than a thousand years after the Roman presence in the region.
 
-\
+\\
 This missing period is important. Romanian was already a developed language by the time we can see it in writing.
 
  
@@ -59,7 +68,7 @@ For example: 
 
 **omul** = the man 
 
-That little **\-ul** is doing the job that *the* does in English. 
+That little **\\-ul** is doing the job that *the* does in English. 
 
 Romanian also developed grammatical features shared with neighbouring Balkan languages. Linguists therefore often discuss Romanian as part of the **Balkan linguistic area**, not simply as a Romance language isolated from everything around it.  
 

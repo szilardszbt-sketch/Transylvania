@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   MapPin, 
   Clock, 
@@ -11,13 +11,17 @@ import {
   Sparkles, 
   Layers, 
   ArrowLeft, 
-  CheckCircle2 
+  CheckCircle2,
+  BookOpen
 } from 'lucide-react';
 import { destinations } from '../data/destinations';
 import { articles } from '../data/articles';
 import { GoodToKnowCard } from '../components/common/GoodToKnowCard';
 import { ShareButtons } from '../components/common/ShareButtons';
 import { FromTheBlog } from '../components/blog/FromTheBlog';
+import { BlogPostCard } from '../components/blog/BlogPostCard';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { getBlogPostsForDestination } from '../services/markdownBlog';
 import { PhotoCreditBadge } from '../components/common/PhotoCreditBadge';
 import { LocationImage } from '../components/common/LocationImage';
 import { formatPhotoCredit } from '../types';
@@ -70,6 +74,21 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({
   const relatedArticles = articles.filter(a =>
     destination.relatedArticleIds.includes(a.slug) || destination.relatedArticleIds.includes(a.id)
   );
+
+  // Dynamically cross-link Markdown / Decap CMS blog posts relevant to this destination
+  const relatedBlogPosts = useMemo(() => {
+    return getBlogPostsForDestination({
+      slug: destination.slug,
+      name: destination.name,
+      romanianName: destination.romanianName,
+      hungarianName: destination.hungarianName,
+      regionId: destination.regionId,
+      regionName: destination.regionName,
+      gatewayCityId: destination.gatewayCityId,
+      nearbyDestinationIds: destination.nearbyDestinationIds,
+      categoryIds: destination.categoryIds
+    }, 6);
+  }, [destination]);
 
   return (
     <div className="space-y-16 sm:space-y-24">
@@ -449,7 +468,48 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({
           </section>
         )}
 
-        {/* 11. HEADLESS WORDPRESS BLOG POSTS (Hidden if no matching posts exist) */}
+        {/* 11. RELATED ARTICLES & FIELD NOTES (Decap CMS Markdown Blog Posts) */}
+        {relatedBlogPosts.length > 0 && (
+          <section id="related-field-notes-section" className="space-y-6 pt-6 border-t border-[#E3DDD2]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E3DDD2] pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-sans font-semibold tracking-[0.2em] uppercase text-[#2D5A38]">
+                    Field Journal Dispatches
+                  </span>
+                  <span className="text-[9px] px-2 py-0.5 bg-[#E8F0EA] text-[#2D5A38] rounded-md font-bold uppercase tracking-wider border border-[#D5E5D8]">
+                    Cross-Linked Notes
+                  </span>
+                </div>
+                <h2 className="font-brand text-2xl sm:text-3xl font-bold text-[#1B3322] mt-1">
+                  Related Articles & Field Notes
+                </h2>
+                <p className="text-xs sm:text-sm text-[#5D665B] mt-1 font-editorial">
+                  First-hand travel essays, road trip impressions, and photography logs connected to {destination.name}.
+                </p>
+              </div>
+              <span className="text-xs text-[#717A70] font-sans">
+                {relatedBlogPosts.length} {relatedBlogPosts.length === 1 ? 'dispatch' : 'dispatches'} connected
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedBlogPosts.map((post) => (
+                <ErrorBoundary key={post.id} variant="card">
+                  <BlogPostCard
+                    post={post}
+                    onClick={() => {
+                      onNavigate(`/blog/${post.slug}`);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  />
+                </ErrorBoundary>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 12. HEADLESS WORDPRESS BLOG POSTS (Hidden if no matching posts exist) */}
         <FromTheBlog
           tagSlug={destination.slug}
           title={`From the Blog: Stories & Guides for ${destination.name}`}
