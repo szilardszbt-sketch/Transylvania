@@ -1,5 +1,5 @@
 ---
-title: Why Is Targu Mures Airport Called Transilvania?
+title: Why Is Târgu Mureș Airport Called Transilvania?
 date: 2026-10-23T21:01:00.000+01:00
 author: The Traveller
 image: /uploads/transylvania-airport.jpg
