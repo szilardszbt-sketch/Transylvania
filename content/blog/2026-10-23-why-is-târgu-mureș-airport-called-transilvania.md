@@ -4,6 +4,9 @@ date: 2026-10-23T21:01:00.000+01:00
 author: The Traveller
 image: /uploads/transylvania-airport.jpg
 category: Destination Guide
+tags:
+  - "#Târgu Mureș #Transylvania #Transilvania Airport #Romanian Airports
+    #Transylvania Travel"
 ---
 If you fly into central Romania, you may notice something slightly curious on your ticket: **Târgu Mureș Transilvania Airport**.
 
