@@ -303,8 +303,20 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://transylvaniaatlas.com/blog/2026-09-26-praid-salt-mine-the-salt-beneath-transylvania-and-the-flood-that-changed-everything</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://transylvaniaatlas.com/blog/2026-10-10-romanian-the-latin-language-that-took-a-different-road</loc>
     <lastmod>2026-10-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://transylvaniaatlas.com/blog/2026-10-23-why-is-targu-mures-airport-called-transilvania</loc>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

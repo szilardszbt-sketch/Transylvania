@@ -23,10 +23,11 @@ import { ShareButtons } from '../components/common/ShareButtons';
 import { PhotoCreditBadge } from '../components/common/PhotoCreditBadge';
 import { BlogPostCard } from '../components/blog/BlogPostCard';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { slugify } from '../utils/slug';
 
 interface BlogPostDetailPageProps {
   slug: string;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, replace?: boolean) => void;
 }
 
 export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({ slug, onNavigate }) => {
@@ -42,50 +43,86 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({ slug, on
     setHeroImageError(false);
 
     try {
-      // 1. First, search local Decap CMS Markdown posts
-      const mdPost = getMarkdownPostBySlug(slug);
+      // 1. Safely decode URI components (handles %C3%A2, %C8%99, %C5%9F, etc.)
+      let decodedSlug = slug;
+      try {
+        decodedSlug = decodeURIComponent(slug);
+      } catch {
+        decodedSlug = slug;
+      }
+      const normalizedQuerySlug = slugify(decodedSlug);
+
+      // Helper to check and trigger canonical redirect if needed
+      const ensureCanonicalRedirect = (canonicalSlug: string, prefix: string = '/blog/') => {
+        if (typeof window !== 'undefined') {
+          const canonicalPath = `${prefix}${canonicalSlug}`;
+          let currentDecodedPath = '';
+          try {
+            currentDecodedPath = decodeURIComponent(window.location.pathname);
+          } catch {
+            currentDecodedPath = window.location.pathname;
+          }
+
+          if (currentDecodedPath !== canonicalPath || slug !== canonicalSlug) {
+            onNavigate(canonicalPath, true);
+          }
+        }
+      };
+
+      // 2. Search local Decap CMS Markdown posts
+      const mdPost = getMarkdownPostBySlug(decodedSlug) || getMarkdownPostBySlug(normalizedQuerySlug);
       if (mdPost) {
         if (isMounted) {
           setPost(mdPost);
           setLoading(false);
+          ensureCanonicalRedirect(mdPost.slug, '/blog/');
         }
         return;
       }
 
-      // 2. Second, check curated static articles
-      const staticMatch = articles.find(a => a.slug === slug);
+      // 3. Second, check curated static articles
+      const staticMatch = articles.find(a => 
+        slugify(a.slug) === normalizedQuerySlug ||
+        slugify(a.title) === normalizedQuerySlug
+      );
       if (staticMatch) {
         if (isMounted) {
+          const canonicalArticleSlug = slugify(staticMatch.slug);
           setPost({
             id: staticMatch.id,
-            slug: staticMatch.slug,
+            slug: canonicalArticleSlug,
             title: staticMatch.title,
             excerpt: staticMatch.excerpt,
             contentHtml: `<p>${staticMatch.excerpt}</p>${staticMatch.content ? staticMatch.content.split('\n\n').map(p => `<p>${p}</p>`).join('') : ''}`,
             date: staticMatch.publishedDate,
             formattedDate: staticMatch.publishedDate,
-            link: `/articles/${staticMatch.slug}`,
+            link: `/articles/${canonicalArticleSlug}`,
             heroImage: staticMatch.heroImage,
             heroImageAlt: staticMatch.heroImageAlt || staticMatch.title,
             heroImageCredit: staticMatch.heroImageCredit,
             authorName: staticMatch.author.name,
             categoryName: staticMatch.category,
-            tags: staticMatch.tags.map(t => t.toLowerCase().replace(/\s+/g, '-')),
+            tags: staticMatch.tags.map(t => slugify(t)),
             readTime: staticMatch.readTime,
             source: 'curated'
           });
           setLoading(false);
+          ensureCanonicalRedirect(canonicalArticleSlug, '/articles/');
         }
         return;
       }
 
-      // 3. Third, try fetching from WordPress if available
+      // 4. Third, try fetching from WordPress if available
       fetchWordPressPosts({ perPage: 100 })
         .then((res) => {
           if (!isMounted) return;
-          const wpMatch = (res.posts || []).find(p => p.slug === slug);
+          const wpMatch = (res.posts || []).find(p => 
+            slugify(p.slug) === normalizedQuerySlug ||
+            slugify(p.title) === normalizedQuerySlug
+          );
           if (wpMatch) {
             setPost(wpMatch);
+            ensureCanonicalRedirect(wpMatch.slug, '/blog/');
           } else {
             setPost(null);
           }
@@ -108,7 +145,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({ slug, on
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [slug, onNavigate]);
 
   // Find related posts (excluding current one)
   const allMdPosts = getMarkdownBlogPosts();
@@ -318,7 +355,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({ slug, on
           </button>
 
           <ShareButtons
-            url={typeof window !== 'undefined' ? window.location.href : `https://transylvania-guide.ro/blog/${post.slug}`}
+            url={typeof window !== 'undefined' ? `${window.location.origin}/blog/${post.slug}` : `https://transylvaniaatlas.com/blog/${post.slug}`}
             title={post.title}
           />
         </div>

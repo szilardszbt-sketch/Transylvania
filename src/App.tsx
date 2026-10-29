@@ -44,11 +44,15 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigate = (path: string) => {
+  const navigate = (path: string, replace?: boolean) => {
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', path);
+      if (replace) {
+        window.history.replaceState({}, '', path);
+      } else {
+        window.history.pushState({}, '', path);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       setCurrentPath(path);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

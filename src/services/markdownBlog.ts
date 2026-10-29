@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import { WordPressPost } from '../types';
+import { slugify } from '../utils/slug';
 
 export interface MarkdownBlogPost extends WordPressPost {
   source: 'markdown';
@@ -197,16 +198,11 @@ function calculateReadingTime(text: string): string {
 
 /**
  * Normalizes text to lowercase alphanumeric without diacritics for flexible matching.
+ * Leverages the shared slugify function for uniform Romanian diacritics handling.
  */
 export function normalizeKeyword(input: string): string {
   if (!input || typeof input !== 'string') return '';
-  return input
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+  return slugify(input);
 }
 
 /**
@@ -238,9 +234,15 @@ export function getMarkdownBlogPosts(): MarkdownBlogPost[] {
 
       // Derive file slug from path (e.g. /content/blog/2026-09-17-welcome-to-transylvania.md -> 2026-09-17-welcome-to-transylvania)
       const filename = filePath.split('/').pop()?.replace(/\.(md|markdown)$/i, '') || 'dispatch';
-      const shortSlug = filename.replace(/^\d{4}-\d{2}-\d{2}-/, '');
 
       const { frontmatter, body } = parseFrontmatterAndBody(rawContent);
+
+      // Ensure canonical ASCII slug even if frontmatter contains custom slug or non-ASCII characters
+      const rawSlug = typeof frontmatter.slug === 'string' && frontmatter.slug.trim()
+        ? frontmatter.slug.trim()
+        : filename;
+      const canonicalSlug = slugify(rawSlug);
+      const shortSlug = slugify(canonicalSlug.replace(/^\d{4}-\d{2}-\d{2}-/, ''));
 
       const rawTitle = typeof frontmatter.title === 'string' ? frontmatter.title.trim() : '';
       const title = rawTitle || shortSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -307,8 +309,8 @@ export function getMarkdownBlogPosts(): MarkdownBlogPost[] {
       const readTime = calculateReadingTime(body);
 
       posts.push({
-        id: `git-${filename}`,
-        slug: filename,
+        id: `git-${canonicalSlug}`,
+        slug: canonicalSlug,
         shortSlug,
         title,
         excerpt,
@@ -316,7 +318,7 @@ export function getMarkdownBlogPosts(): MarkdownBlogPost[] {
         contentHtml,
         date: rawDate || new Date().toISOString(),
         formattedDate,
-        link: `/blog/${filename}`,
+        link: `/blog/${canonicalSlug}`,
         heroImage,
         heroImageAlt: title,
         heroImageCredit: `Photo: ${authorName}`,
@@ -345,17 +347,17 @@ export function getMarkdownBlogPosts(): MarkdownBlogPost[] {
 
 /**
  * Finds a Markdown blog post by full slug, short slug, or sanitized title.
- * Safe against missing/unmatched slugs.
+ * Safe against missing/unmatched slugs, diacritics, percent-encoding, and unicode normalization differences.
  */
 export function getMarkdownPostBySlug(slug: string): MarkdownBlogPost | undefined {
   if (!slug) return undefined;
   try {
     const posts = getMarkdownBlogPosts();
-    const normalized = normalizeKeyword(slug);
+    const normalized = slugify(slug);
     return posts.find(p => 
-      normalizeKeyword(p.slug) === normalized || 
-      normalizeKeyword(p.shortSlug) === normalized ||
-      normalizeKeyword(p.title) === normalized
+      slugify(p.slug) === normalized || 
+      slugify(p.shortSlug) === normalized ||
+      slugify(p.title) === normalized
     );
   } catch (err) {
     console.error('Safe catch: getMarkdownPostBySlug failed:', err);

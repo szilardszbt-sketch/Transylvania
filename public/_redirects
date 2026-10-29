@@ -5,6 +5,15 @@
 /admin        /admin/index.html   200
 /admin/*      /admin/:splat       200
 
-# 2. SPA catch-all rewrite rule for all client-side routes
+# 2. Canonical 301 redirects for renamed accented blog posts
+/blog/2026-10-23-why-is-târgu-mureș-airport-called-transilvania  /blog/2026-10-23-why-is-targu-mures-airport-called-transilvania  301!
+/blog/2026-10-23-why-is-târgu-mureş-airport-called-transilvania  /blog/2026-10-23-why-is-targu-mures-airport-called-transilvania  301!
+/blog/2026-10-23-why-is-t%C3%A2rgu-mure%C8%99-airport-called-transilvania  /blog/2026-10-23-why-is-targu-mures-airport-called-transilvania  301!
+/blog/2026-10-23-why-is-t%C3%A2rgu-mure%C5%9F-airport-called-transilvania  /blog/2026-10-23-why-is-targu-mures-airport-called-transilvania  301!
+/blog/2026-10-23-why-is-t%c3%a2rgu-mure%c8%99-airport-called-transilvania  /blog/2026-10-23-why-is-targu-mures-airport-called-transilvania  301!
+/blog/2026-10-23-why-is-t%c3%a2rgu-mure%c5%9f-airport-called-transilvania  /blog/2026-10-23-why-is-targu-mures-airport-called-transilvania  301!
+
+# 3. SPA catch-all rewrite rule for all client-side routes
 # Returns HTTP 200 (rewrite, not redirect) so browser URL remains intact
 /*            /index.html         200
+

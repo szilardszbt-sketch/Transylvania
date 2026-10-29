@@ -5,6 +5,10 @@ backend:
 media_folder: "public/uploads"
 public_folder: "/uploads"
 
+slug:
+  encoding: "ascii"
+  clean_accents: true
+
 collections:
   - name: "blog"
     label: "Blog Posts"

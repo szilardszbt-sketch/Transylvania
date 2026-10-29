@@ -4,6 +4,7 @@
 
 import { Destination, WordPressPost, Article } from '../types';
 import { sanitizeHtmlToText } from '../services/wordpressBlog';
+import { slugify } from './slug';
 
 export const DEFAULT_SITE_TITLE = 'TRANSYLVANIA — The Heart of Romania';
 export const DEFAULT_SITE_DESCRIPTION =
@@ -114,7 +115,7 @@ export function generateArticleSchema(
   isWpPost: boolean = false
 ): Record<string, any> {
   try {
-    const slug = typeof post?.slug === 'string' && post.slug.trim().length > 0 ? post.slug.trim() : 'journal';
+    const slug = typeof post?.slug === 'string' && post.slug.trim().length > 0 ? slugify(post.slug.trim()) : 'journal';
     const pageUrl = isWpPost ? `${siteOrigin}/blog/${slug}` : `${siteOrigin}/articles/${slug}`;
     const rawImage = typeof post?.heroImage === 'string' ? post.heroImage.trim() : '';
     const imageUrl = rawImage

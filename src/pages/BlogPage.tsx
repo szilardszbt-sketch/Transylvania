@@ -9,6 +9,7 @@ import { BlogPostCard } from '../components/blog/BlogPostCard';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { SEO } from '../components/common/SEO';
 import { generateArticleSchema } from '../utils/seo';
+import { slugify } from '../utils/slug';
 
 interface BlogPageProps {
   onNavigate: (path: string) => void;
@@ -65,7 +66,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
 
     // 2. Check WordPress posts
     if (wpPosts.length > 0) {
-      const wpMatch = wpPosts.find(p => p.slug === initialPostSlug);
+      const wpMatch = wpPosts.find(p => slugify(p.slug) === slugify(initialPostSlug));
       if (wpMatch) {
         setSelectedPost(wpMatch);
         return;
@@ -73,7 +74,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, initialPostSlug 
     }
 
     // 3. Fallback to curated static articles
-    const staticMatch = articles.find(a => a.slug === initialPostSlug);
+    const staticMatch = articles.find(a => slugify(a.slug) === slugify(initialPostSlug));
     if (staticMatch) {
       setSelectedPost({
         id: staticMatch.id,
